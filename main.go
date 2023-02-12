@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2"
 	"golang.design/x/clipboard"
 )
 
@@ -32,6 +32,12 @@ type Inputs struct {
 	localRFC3339Label  *widget.Label
 	estRFC3339Label    *widget.Label
 	pstRFC3339Label    *widget.Label
+
+	unixTimestampCopyButton *widget.Button
+	utcRFC3339CopyButton    *widget.Button
+	localRFC3339CopyButton  *widget.Button
+	estRFC3339CopyButton    *widget.Button
+	pstRFC3339CopyButton    *widget.Button
 }
 
 func (i *Inputs) MakeInputs() {
@@ -49,8 +55,28 @@ func (i *Inputs) MakeInputs() {
 	i.estRFC3339Label = widget.NewLabel("EST")
 	i.pstRFC3339Label = widget.NewLabel("PST")
 
+	i.unixTimestampCopyButton = widget.NewButton("Copy", func() {
+		clipboard.Write(clipboard.FmtText, []byte(i.unixTimestampEntry.Text))
+	})
+
+	i.utcRFC3339CopyButton = widget.NewButton("Copy", func() {
+		clipboard.Write(clipboard.FmtText, []byte(i.utcRFC3339Entry.Text))
+	})
+
+	i.localRFC3339CopyButton = widget.NewButton("Copy", func() {
+		clipboard.Write(clipboard.FmtText, []byte(i.localRFC3339Entry.Text))
+	})
+
+	i.estRFC3339CopyButton = widget.NewButton("Copy", func() {
+		clipboard.Write(clipboard.FmtText, []byte(i.estRFC3339Entry.Text))
+	})
+
+	i.pstRFC3339CopyButton = widget.NewButton("Copy", func() {
+		clipboard.Write(clipboard.FmtText, []byte(i.pstRFC3339Entry.Text))
+	})
+
 	style := fyne.TextStyle{
-		Bold: 	true,
+		Bold: true,
 	}
 
 	i.unixTimestampLabel.TextStyle = style
@@ -84,14 +110,23 @@ func (i *Inputs) UpdateInputs(t time.Time) {
 // return all inputs as a slice of fyne widgets
 func (i *Inputs) ReturnInputs() []fyne.CanvasObject {
 	return []fyne.CanvasObject{
-		i.unixTimestampLabel, i.unixTimestampEntry,
-		i.utcRFC3339Label, i.utcRFC3339Entry,
-		i.localRFC3339Label, i.localRFC3339Entry,
-		i.estRFC3339Label, i.estRFC3339Entry,
-		i.pstRFC3339Label, i.pstRFC3339Entry,
+		i.unixTimestampLabel,
+		i.unixTimestampEntry,
+		i.unixTimestampCopyButton,
+		i.utcRFC3339Label,
+		i.utcRFC3339Entry,
+		i.utcRFC3339CopyButton,
+		i.localRFC3339Label,
+		i.localRFC3339Entry,
+		i.localRFC3339CopyButton,
+		i.estRFC3339Label,
+		i.estRFC3339Entry,
+		i.estRFC3339CopyButton,
+		i.pstRFC3339Label,
+		i.pstRFC3339Entry,
+		i.pstRFC3339CopyButton,
 	}
 }
-
 
 func main() {
 
@@ -139,7 +174,7 @@ func main() {
 		log("Clipboard content is not a valid timestamp")
 	})
 
-	content := container.New(layout.NewVBoxLayout(), nowButton, fromCliboardButton, container.New(layout.NewGridLayout(2), inputs.ReturnInputs()...) )
+	content := container.New(layout.NewVBoxLayout(), nowButton, fromCliboardButton, container.New(layout.NewGridLayout(3), inputs.ReturnInputs()...))
 
 	mainWindow.SetContent(content)
 	mainWindow.ShowAndRun()
