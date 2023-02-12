@@ -137,8 +137,15 @@ func main() {
 	inputs := Inputs{}
 	inputs.MakeInputs()
 
+	status := widget.NewLabel(fmt.Sprintf("[%s] Ready", time.Now().Format("15:04:05")))
+
+	setStatus := func(s string) {
+		status.SetText(fmt.Sprintf("[%s]: %s", time.Now().Format("15:04:05"), s))
+	}
+
 	nowButton := widget.NewButton("Now", func() {
 		inputs.UpdateInputs(time.Now())
+		setStatus("Set to now")
 	})
 
 	fromCliboardButton := widget.NewButton("From clipboard", func() {
@@ -153,6 +160,7 @@ func main() {
 		t, err := time.Parse(time.RFC3339, clipboardContent)
 		if err == nil {
 			log(fmt.Sprintf("Clipboard content is a valid RFC3339 timestamp, %s", t.Format(time.RFC3339)))
+			setStatus("Paste from clipboard")
 			inputs.UpdateInputs(t)
 			return
 		}
@@ -160,6 +168,7 @@ func main() {
 		t, err = time.Parse(time.RFC3339Nano, clipboardContent)
 		if err == nil {
 			log(fmt.Sprintf("Clipboard content is a valid RFC3339Nano timestamp, %s", t.Format(time.RFC3339Nano)))
+			setStatus("Paste from clipboard")
 			inputs.UpdateInputs(t)
 			return
 		}
@@ -167,14 +176,16 @@ func main() {
 		intT, err := strconv.ParseInt(clipboardContent, 10, 64)
 		if err == nil {
 			log(fmt.Sprintf("Clipboard content is a valid Unix timestamp, %d", intT))
+			setStatus("Paste from clipboard")
 			inputs.UpdateInputs(time.Unix(intT, 0))
 			return
 		}
 
 		log("Clipboard content is not a valid timestamp")
+		setStatus("Clipboard content is not a valid timestamp")
 	})
 
-	content := container.New(layout.NewVBoxLayout(), nowButton, fromCliboardButton, container.New(layout.NewGridLayout(3), inputs.ReturnInputs()...))
+	content := container.New(layout.NewVBoxLayout(), nowButton, fromCliboardButton, container.New(layout.NewGridLayout(3), inputs.ReturnInputs()...), status)
 
 	mainWindow.SetContent(content)
 	mainWindow.ShowAndRun()
