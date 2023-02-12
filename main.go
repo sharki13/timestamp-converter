@@ -20,117 +20,108 @@ func log(text string) {
 	fmt.Printf("[%s] %s\n", timestamp, text)
 }
 
-type Inputs struct {
-	unixTimestampEntry *widget.Entry
-	utcRFC3339Entry    *widget.Entry
-	localRFC3339Entry  *widget.Entry
-	estRFC3339Entry    *widget.Entry
-	pstRFC3339Entry    *widget.Entry
+// define enum for the different sets types, rfc and unix
+type TimestampItemsSetType int
 
-	unixTimestampLabel *widget.Label
-	utcRFC3339Label    *widget.Label
-	localRFC3339Label  *widget.Label
-	estRFC3339Label    *widget.Label
-	pstRFC3339Label    *widget.Label
+const (
+	RFC3339 TimestampItemsSetType = iota
+	RFC3339Nano
+	Unix
+)
 
-	unixTimestampCopyButton *widget.Button
-	utcRFC3339CopyButton    *widget.Button
-	localRFC3339CopyButton  *widget.Button
-	estRFC3339CopyButton    *widget.Button
-	pstRFC3339CopyButton    *widget.Button
+type TimestampItemsSet struct {
+	entry *widget.Entry
+	label *widget.Label
+	copyButton *widget.Button
+	setType TimestampItemsSetType
+	loc *time.Location
 }
 
-func (i *Inputs) MakeInputs() {
-	now := time.Now()
+func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, timezone *time.Location) TimestampItemsSet {
+	if timezone == nil {
+		panic("timezone cannot be nil")
+	}
 
-	i.unixTimestampEntry = widget.NewEntry()
-	i.utcRFC3339Entry = widget.NewEntry()
-	i.localRFC3339Entry = widget.NewEntry()
-	i.estRFC3339Entry = widget.NewEntry()
-	i.pstRFC3339Entry = widget.NewEntry()
+	t := TimestampItemsSet{}
 
-	i.unixTimestampLabel = widget.NewLabel("Unix")
-	i.utcRFC3339Label = widget.NewLabel("UTC")
-	i.localRFC3339Label = widget.NewLabel("Local")
-	i.estRFC3339Label = widget.NewLabel("EST")
-	i.pstRFC3339Label = widget.NewLabel("PST")
-
-	i.unixTimestampCopyButton = widget.NewButton("Copy", func() {
-		clipboard.Write(clipboard.FmtText, []byte(i.unixTimestampEntry.Text))
-	})
-
-	i.utcRFC3339CopyButton = widget.NewButton("Copy", func() {
-		clipboard.Write(clipboard.FmtText, []byte(i.utcRFC3339Entry.Text))
-	})
-
-	i.localRFC3339CopyButton = widget.NewButton("Copy", func() {
-		clipboard.Write(clipboard.FmtText, []byte(i.localRFC3339Entry.Text))
-	})
-
-	i.estRFC3339CopyButton = widget.NewButton("Copy", func() {
-		clipboard.Write(clipboard.FmtText, []byte(i.estRFC3339Entry.Text))
-	})
-
-	i.pstRFC3339CopyButton = widget.NewButton("Copy", func() {
-		clipboard.Write(clipboard.FmtText, []byte(i.pstRFC3339Entry.Text))
+	t.entry = widget.NewEntry()
+	t.label = widget.NewLabel(labelText)
+	t.copyButton = widget.NewButton("Copy", func() {
+		clipboard.Write(clipboard.FmtText, []byte(t.entry.Text))
 	})
 
 	style := fyne.TextStyle{
 		Bold: true,
 	}
 
-	i.unixTimestampLabel.TextStyle = style
-	i.utcRFC3339Label.TextStyle = style
-	i.localRFC3339Label.TextStyle = style
-	i.estRFC3339Label.TextStyle = style
-	i.pstRFC3339Label.TextStyle = style
+	t.label.TextStyle = style
+	t.entry.TextStyle = style
 
-	i.unixTimestampEntry.TextStyle = style
-	i.utcRFC3339Entry.TextStyle = style
-	i.localRFC3339Entry.TextStyle = style
-	i.estRFC3339Entry.TextStyle = style
-	i.pstRFC3339Entry.TextStyle = style
+	t.setType = setType
+	t.loc = timezone
 
-	i.unixTimestampEntry.SetText(strconv.FormatInt(now.Unix(), 10))
-	i.utcRFC3339Entry.SetText(now.UTC().Format(time.RFC3339))
-	i.localRFC3339Entry.SetText(now.Local().Format(time.RFC3339))
-	i.estRFC3339Entry.SetText(now.In(time.FixedZone("EST", -5*60*60)).Format(time.RFC3339))
-	i.pstRFC3339Entry.SetText(now.In(time.FixedZone("PST", -8*60*60)).Format(time.RFC3339))
+	return t
+}
+
+func (t *TimestampItemsSet) Update(e time.Time) {
+	switch t.setType {
+	case RFC3339:
+		t.entry.SetText(e.In(t.loc).Format(time.RFC3339))
+	case RFC3339Nano:
+		t.entry.SetText(e.In(t.loc).Format(time.RFC3339Nano))
+	case Unix:
+		t.entry.SetText(strconv.FormatInt(e.Unix(), 10))
+	}
+}
+
+func (t *TimestampItemsSet) ReturnItems() []fyne.CanvasObject {
+	return []fyne.CanvasObject{
+		t.label,
+		t.entry,
+		t.copyButton,
+	}
+}
+
+type Inputs struct {
+	items []TimestampItemsSet
+}
+
+func (i *Inputs) MakeInputs() {
+
+	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC))
+	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC))
+	i.items = append(i.items, MakeTimestampItemsSet("Local", RFC3339, time.Local))
+	i.items = append(i.items, MakeTimestampItemsSet("EST", RFC3339, time.FixedZone("EST", -5*60*60)))
+	i.items = append(i.items, MakeTimestampItemsSet("PST", RFC3339, time.FixedZone("PST", -8*60*60)))
 }
 
 // function which takes a time.Time and updates the inputs
 func (i *Inputs) UpdateInputs(t time.Time) {
-	i.unixTimestampEntry.SetText(strconv.FormatInt(t.Unix(), 10))
-	i.utcRFC3339Entry.SetText(t.UTC().Format(time.RFC3339))
-	i.localRFC3339Entry.SetText(t.Local().Format(time.RFC3339))
-	i.estRFC3339Entry.SetText(t.In(time.FixedZone("EST", -5*60*60)).Format(time.RFC3339))
-	i.pstRFC3339Entry.SetText(t.In(time.FixedZone("PST", -8*60*60)).Format(time.RFC3339))
+	for _, item := range i.items {
+		item.Update(t)
+	}
 }
 
 // return all inputs as a slice of fyne widgets
 func (i *Inputs) ReturnInputs() []fyne.CanvasObject {
-	return []fyne.CanvasObject{
-		i.unixTimestampLabel,
-		i.unixTimestampEntry,
-		i.unixTimestampCopyButton,
-		i.utcRFC3339Label,
-		i.utcRFC3339Entry,
-		i.utcRFC3339CopyButton,
-		i.localRFC3339Label,
-		i.localRFC3339Entry,
-		i.localRFC3339CopyButton,
-		i.estRFC3339Label,
-		i.estRFC3339Entry,
-		i.estRFC3339CopyButton,
-		i.pstRFC3339Label,
-		i.pstRFC3339Entry,
-		i.pstRFC3339CopyButton,
+	var items []fyne.CanvasObject
+
+	for _, item := range i.items {
+		items = append(items, item.ReturnItems()...)
 	}
+
+	return items
 }
 
 func main() {
 
 	app := app.New()
+
+	err := clipboard.Init()
+	if err != nil {
+		panic(err)
+	}
+
 	mainWindow := app.NewWindow("Timestamp converter")
 	mainWindow.Resize(fyne.NewSize(400, 100))
 
@@ -149,39 +140,31 @@ func main() {
 	})
 
 	fromCliboardButton := widget.NewButton("From clipboard", func() {
-		err := clipboard.Init()
-		if err != nil {
-			panic(err)
-		}
-
 		clipboardContent := string(clipboard.Read(clipboard.FmtText))
-		log("Clipboard content: " + clipboardContent)
+
+		lambdaUpdate := func(t time.Time) {
+			inputs.UpdateInputs(t)
+			setStatus("Paste from clipboard")
+		}
 
 		t, err := time.Parse(time.RFC3339, clipboardContent)
 		if err == nil {
-			log(fmt.Sprintf("Clipboard content is a valid RFC3339 timestamp, %s", t.Format(time.RFC3339)))
-			setStatus("Paste from clipboard")
-			inputs.UpdateInputs(t)
+			lambdaUpdate(t)
 			return
 		}
 
 		t, err = time.Parse(time.RFC3339Nano, clipboardContent)
 		if err == nil {
-			log(fmt.Sprintf("Clipboard content is a valid RFC3339Nano timestamp, %s", t.Format(time.RFC3339Nano)))
-			setStatus("Paste from clipboard")
-			inputs.UpdateInputs(t)
+			lambdaUpdate(t)
 			return
 		}
 
 		intT, err := strconv.ParseInt(clipboardContent, 10, 64)
 		if err == nil {
-			log(fmt.Sprintf("Clipboard content is a valid Unix timestamp, %d", intT))
-			setStatus("Paste from clipboard")
-			inputs.UpdateInputs(time.Unix(intT, 0))
+			lambdaUpdate(time.Unix(intT, 0))
 			return
 		}
 
-		log("Clipboard content is not a valid timestamp")
 		setStatus("Clipboard content is not a valid timestamp")
 	})
 
