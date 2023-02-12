@@ -2,7 +2,10 @@ module sharki13/timestamp-converter
 
 go 1.19
 
-require fyne.io/fyne/v2 v2.3.0
+require (
+	fyne.io/fyne/v2 v2.3.0
+	golang.design/x/clipboard v0.6.3
+)
 
 require (
 	fyne.io/systray v1.10.1-0.20221115204952-d16a6177e6f1 // indirect
@@ -26,7 +29,6 @@ require (
 	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/tevino/abool v1.2.0 // indirect
 	github.com/yuin/goldmark v1.4.0 // indirect
-	golang.design/x/clipboard v0.6.3 // indirect
 	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
 	golang.org/x/mobile v0.0.0-20211207041440-4e6c2922fdee // indirect
