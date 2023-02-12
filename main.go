@@ -29,7 +29,7 @@ func main() {
 
 	mainWindow := app.NewWindow("Timestamp converter")
 
-	mainWindow.Resize(fyne.NewSize(600, 100))
+	mainWindow.Resize(fyne.NewSize(650, 100))
 
 	timeConverter := TimeConverter{}
 	timeConverter.Make()

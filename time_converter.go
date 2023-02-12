@@ -10,6 +10,28 @@ import (
 	"golang.design/x/clipboard"
 )
 
+type TimezoneDefinition struct {
+	Name string
+	Location string
+}
+
+func getLocalTimezoneName() string {
+	name, _ := time.Now().Zone()
+
+	return name
+}
+
+var Timezones = []TimezoneDefinition{
+	{"Unix", "Unix"},
+	{"UTC", "UTC"},
+	{getLocalTimezoneName(), "Local"},
+	{"HST", "Pacific/Honolulu"},
+	{"PST/PDT", "America/Los_Angeles"},
+	{"CST/CDT", "America/Chicago"},
+	{"EST/EDT", "America/New_York"},
+	{"CET/CEST", "Europe/Paris"},
+}
+
 const statusTimeFormat = "15:04:05"
 
 type TimeConverter struct {
@@ -24,14 +46,20 @@ type TimeConverter struct {
 
 func (i *TimeConverter) Make() {
 	// get local timezone shift
-	localTzName, offset := time.Now().Zone()
 	
+	
+	for _, tz := range Timezones {
+		if tz.Location == "Unix" {
+			i.items = append(i.items, MakeTimestampItemsSet(tz.Name, Unix, time.UTC, i.Update, i.SetStatus))
+		} else {
+			loc, err := time.LoadLocation(tz.Location)
+			if err != nil {
+				panic(err)
+			}
+			i.items = append(i.items, MakeTimestampItemsSet(tz.Name, RFC3339, loc, i.Update, i.SetStatus))
+		}
+	}
 
-	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC, i.Update, i.SetStatus))
-	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC, i.Update, i.SetStatus))
-	i.items = append(i.items, MakeTimestampItemsSet(fmt.Sprintf("Local: %s (%d:00)", localTzName, offset/3600), RFC3339, time.Local, i.Update, i.SetStatus))
-	i.items = append(i.items, MakeTimestampItemsSet("EST (-5:00)", RFC3339, time.FixedZone("EST", -5*60*60), i.Update, i.SetStatus))
-	i.items = append(i.items, MakeTimestampItemsSet("PST (-8:00)", RFC3339, time.FixedZone("PST", -8*60*60), i.Update, i.SetStatus))
 	i.status = widget.NewLabel("")
 	i.Update(time.Now())
 	i.CurrentTimestamp = time.Now()
@@ -42,6 +70,8 @@ func (i *TimeConverter) Make() {
 		i.watchClipboard = false
 		i.watchClipboardCheck.SetChecked(false)
 	})
+
+	i.nowButton.Importance = widget.WarningImportance
 
 	i.watchClipboardCheck = widget.NewCheck("Watch clipboard", func(b bool) {
 		i.watchClipboard = b
