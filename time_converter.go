@@ -24,11 +24,11 @@ func (i *TimeConverter) Make() {
 	localTzName, offset := time.Now().Zone()
 	
 
-	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC, i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC, i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet(fmt.Sprintf("Local: %s (%d:00)", localTzName, offset/3600), RFC3339, time.Local, i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet("EST (-5:00)", RFC3339, time.FixedZone("EST", -5*60*60), i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet("PST (-8:00)", RFC3339, time.FixedZone("PST", -8*60*60), i.Update))
+	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC, i.Update, i.SetStatus))
+	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC, i.Update, i.SetStatus))
+	i.items = append(i.items, MakeTimestampItemsSet(fmt.Sprintf("Local: %s (%d:00)", localTzName, offset/3600), RFC3339, time.Local, i.Update, i.SetStatus))
+	i.items = append(i.items, MakeTimestampItemsSet("EST (-5:00)", RFC3339, time.FixedZone("EST", -5*60*60), i.Update, i.SetStatus))
+	i.items = append(i.items, MakeTimestampItemsSet("PST (-8:00)", RFC3339, time.FixedZone("PST", -8*60*60), i.Update, i.SetStatus))
 	i.status = widget.NewLabel("")
 	i.Update(time.Now())
 	i.SetStatus("Ready")
