@@ -17,3 +17,6 @@
 
 # macOs stuff
 .DS_Store
+
+timestamp-converter
+timestamp-converter.app
