@@ -113,6 +113,25 @@ func (i *Inputs) ReturnInputs() []fyne.CanvasObject {
 	return items
 }
 
+func PraseStringToTime(s string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, s)
+	if err == nil {
+		return t, nil
+	}
+
+	t, err = time.Parse(time.RFC3339Nano, s)
+	if err == nil {
+		return t, nil
+	}
+
+	intT, err := strconv.ParseInt(s, 10, 64)
+	if err == nil {
+		return time.Unix(intT, 0), nil
+	}
+
+	return time.Time{}, fmt.Errorf("invalid time format")
+}
+
 func main() {
 
 	app := app.New()
@@ -142,26 +161,10 @@ func main() {
 	fromCliboardButton := widget.NewButton("From clipboard", func() {
 		clipboardContent := string(clipboard.Read(clipboard.FmtText))
 
-		lambdaUpdate := func(t time.Time) {
+		t, err := PraseStringToTime(clipboardContent)
+		if err == nil {
 			inputs.UpdateInputs(t)
-			setStatus("Paste from clipboard")
-		}
-
-		t, err := time.Parse(time.RFC3339, clipboardContent)
-		if err == nil {
-			lambdaUpdate(t)
-			return
-		}
-
-		t, err = time.Parse(time.RFC3339Nano, clipboardContent)
-		if err == nil {
-			lambdaUpdate(t)
-			return
-		}
-
-		intT, err := strconv.ParseInt(clipboardContent, 10, 64)
-		if err == nil {
-			lambdaUpdate(time.Unix(intT, 0))
+			setStatus("Set to clipboard content")
 			return
 		}
 
