@@ -1,12 +1,12 @@
 package main
 
 import (
-	"time"
 	"strconv"
+	"time"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 
 	"golang.design/x/clipboard"
 )
@@ -23,7 +23,6 @@ const (
 type TimestampItemsSet struct {
 	entry *widget.Entry
 	label *widget.Label
-	copyButton *widget.Button
 	setType TimestampItemsSetType
 	loc *time.Location
 }
@@ -62,12 +61,12 @@ func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, time
 		globalUpdate(t)
 	}
 
-	t.label = widget.NewLabel(labelText)
-
-	t.copyButton = widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+	t.entry.ActionItem = widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
 		clipboard.Write(clipboard.FmtText, []byte(t.entry.Text))
 		setStatus("Copied to clipboard")
 	})
+
+	t.label = widget.NewLabel(labelText)
 
 	style := fyne.TextStyle{
 		Bold: true,
@@ -97,6 +96,5 @@ func (t *TimestampItemsSet) ReturnItems() []fyne.CanvasObject {
 	return []fyne.CanvasObject{
 		t.label,
 		t.entry,
-		t.copyButton,
 	}
 }

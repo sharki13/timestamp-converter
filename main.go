@@ -34,7 +34,7 @@ func main() {
 	timeConverter := TimeConverter{}
 	timeConverter.Make()
 
-	content := container.New(layout.NewVBoxLayout(), container.New(layout.NewHBoxLayout(), timeConverter.ReturnButtons()...), container.New(layout.NewGridLayout(3), timeConverter.ReturnTimestampSets()...), timeConverter.ReturnStatus())
+	content := container.New(layout.NewVBoxLayout(), container.New(layout.NewHBoxLayout(), timeConverter.ReturnButtons()...), container.New(layout.NewGridLayout(2), timeConverter.ReturnTimestampSets()...), timeConverter.ReturnStatus())
 
 	// run funtion in backgound to check clipboard
 	go func(enable *bool) {
