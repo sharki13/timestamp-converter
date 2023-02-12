@@ -46,7 +46,7 @@ func main() {
 					timeConverter.Update(clipTime)
 					timeConverter.SetStatus("Updated from clipboard")
 				}
-			time.Sleep(1 * time.Second)
+				time.Sleep(1 * time.Second)
 			}
 		}
 	}(&timeConverter.watchClipboard)
