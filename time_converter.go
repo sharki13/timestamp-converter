@@ -24,8 +24,9 @@ func (i *TimeConverter) Make() {
 	i.items = append(i.items, MakeTimestampItemsSet("Local", RFC3339, time.Local, i.Update))
 	i.items = append(i.items, MakeTimestampItemsSet("EST", RFC3339, time.FixedZone("EST", -5*60*60), i.Update))
 	i.items = append(i.items, MakeTimestampItemsSet("PST", RFC3339, time.FixedZone("PST", -8*60*60), i.Update))
+	i.status = widget.NewLabel("")
 	i.Update(time.Now())
-	i.status = widget.NewLabel(fmt.Sprintf("[%s] Ready", time.Now().Format(statusTimeFormat)))
+	i.SetStatus("Ready")
 	i.nowButton = widget.NewButton("Now !", func() {
 		i.Update(time.Now())
 	})
@@ -43,9 +44,7 @@ func (i *TimeConverter) Make() {
 }
 
 func (i *TimeConverter) SetStatus(text string) {
-	if i.status != nil {
-		i.status.SetText(fmt.Sprintf("[%s] %s", time.Now().Format(statusTimeFormat), text))
-	}
+	i.status.SetText(fmt.Sprintf("[%s] %s", time.Now().Format(statusTimeFormat), text))
 }
 
 // function which takes a time.Time and updates the inputs
