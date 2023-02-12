@@ -142,7 +142,7 @@ func main() {
 	}
 
 	mainWindow := app.NewWindow("Timestamp converter")
-	mainWindow.Resize(fyne.NewSize(400, 100))
+	mainWindow.Resize(fyne.NewSize(600, 100))
 
 	inputs := Inputs{}
 	inputs.MakeInputs()
@@ -152,6 +152,9 @@ func main() {
 	setStatus := func(s string) {
 		status.SetText(fmt.Sprintf("[%s]: %s", time.Now().Format("15:04:05"), s))
 	}
+
+	inputs.UpdateInputs(time.Now())
+	setStatus("Set to now")
 
 	nowButton := widget.NewButton("Now", func() {
 		inputs.UpdateInputs(time.Now())
