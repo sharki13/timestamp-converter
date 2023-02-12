@@ -17,6 +17,9 @@ type TimeConverter struct {
 	status *widget.Label
 	nowButton *widget.Button
 	fromCliboardButton *widget.Button
+	CurrentTimestamp time.Time
+	watchClipboard bool
+	watchClipboardCheck *widget.Check
 }
 
 func (i *TimeConverter) Make() {
@@ -31,11 +34,19 @@ func (i *TimeConverter) Make() {
 	i.items = append(i.items, MakeTimestampItemsSet("PST (-8:00)", RFC3339, time.FixedZone("PST", -8*60*60), i.Update, i.SetStatus))
 	i.status = widget.NewLabel("")
 	i.Update(time.Now())
+	i.CurrentTimestamp = time.Now()
 	i.SetStatus("Ready")
 	i.nowButton = widget.NewButton("Now !", func() {
 		i.Update(time.Now())
 		i.SetStatus("Updated to now")
+		i.watchClipboard = false
+		i.watchClipboardCheck.SetChecked(false)
 	})
+
+	i.watchClipboardCheck = widget.NewCheck("Watch clipboard", func(b bool) {
+		i.watchClipboard = b
+	})
+
 	i.fromCliboardButton = widget.NewButtonWithIcon("", theme.ContentPasteIcon(), func() {
 		clipboardContent := string(clipboard.Read(clipboard.FmtText))
 
@@ -58,6 +69,7 @@ func (i *TimeConverter) Update(t time.Time) {
 	for _, item := range i.items {
 		item.Update(t)
 	}
+	i.CurrentTimestamp = t
 
 	i.SetStatus("Updated")
 }
@@ -78,5 +90,5 @@ func (i *TimeConverter) ReturnStatus() fyne.CanvasObject {
 }
 
 func (i *TimeConverter) ReturnButtons() []fyne.CanvasObject {
-	return []fyne.CanvasObject{i.nowButton, i.fromCliboardButton}
+	return []fyne.CanvasObject{i.nowButton, i.fromCliboardButton, i.watchClipboardCheck}
 }

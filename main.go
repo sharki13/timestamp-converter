@@ -28,12 +28,28 @@ func main() {
 	}
 
 	mainWindow := app.NewWindow("Timestamp converter")
+
 	mainWindow.Resize(fyne.NewSize(600, 100))
 
 	timeConverter := TimeConverter{}
 	timeConverter.Make()
 
 	content := container.New(layout.NewVBoxLayout(), container.New(layout.NewHBoxLayout(), timeConverter.ReturnButtons()...), container.New(layout.NewGridLayout(3), timeConverter.ReturnTimestampSets()...), timeConverter.ReturnStatus())
+
+	// run funtion in backgound to check clipboard
+	go func(enable *bool) {
+		for {
+			if *enable {
+				clipboardContent := string(clipboard.Read(clipboard.FmtText))
+				clipTime, err := PraseStringToTime(clipboardContent)
+				if err == nil && clipTime != timeConverter.CurrentTimestamp {
+					timeConverter.Update(clipTime)
+					timeConverter.SetStatus("Updated from clipboard")
+				}
+			time.Sleep(1 * time.Second)
+			}
+		}
+	}(&timeConverter.watchClipboard)
 
 	mainWindow.SetContent(content)
 	mainWindow.ShowAndRun()
