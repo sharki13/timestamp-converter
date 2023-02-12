@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
+	"fyne.io/fyne/v2/theme"
 
 	"golang.design/x/clipboard"
 )
@@ -27,7 +28,7 @@ type TimestampItemsSet struct {
 	loc *time.Location
 }
 
-func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, timezone *time.Location) TimestampItemsSet {
+func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, timezone *time.Location, globalUpdate func(time.Time)) TimestampItemsSet {
 	if timezone == nil {
 		panic("timezone cannot be nil")
 	}
@@ -35,8 +36,35 @@ func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, time
 	t := TimestampItemsSet{}
 
 	t.entry = widget.NewEntry()
+
+	t.entry.Validator = func(s string) error {
+		switch setType {
+		case RFC3339:
+			_, err := time.Parse(time.RFC3339, s)
+			return err
+		case RFC3339Nano:
+			_, err := time.Parse(time.RFC3339Nano, s)
+			return err
+		case Unix:
+			_, err := strconv.ParseInt(s, 10, 64)
+			return err
+		}
+
+		return nil
+	}
+
+	t.entry.OnChanged = func(s string) {
+		t, err := PraseStringToTime(s)
+		if err != nil {
+			return
+		}
+
+		globalUpdate(t)
+	}
+
 	t.label = widget.NewLabel(labelText)
-	t.copyButton = widget.NewButton("Copy", func() {
+
+	t.copyButton = widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
 		clipboard.Write(clipboard.FmtText, []byte(t.entry.Text))
 	})
 

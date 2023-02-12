@@ -19,14 +19,14 @@ type TimeConverter struct {
 }
 
 func (i *TimeConverter) Make() {
-	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC))
-	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC))
-	i.items = append(i.items, MakeTimestampItemsSet("Local", RFC3339, time.Local))
-	i.items = append(i.items, MakeTimestampItemsSet("EST", RFC3339, time.FixedZone("EST", -5*60*60)))
-	i.items = append(i.items, MakeTimestampItemsSet("PST", RFC3339, time.FixedZone("PST", -8*60*60)))
+	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC, i.Update))
+	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC, i.Update))
+	i.items = append(i.items, MakeTimestampItemsSet("Local", RFC3339, time.Local, i.Update))
+	i.items = append(i.items, MakeTimestampItemsSet("EST", RFC3339, time.FixedZone("EST", -5*60*60), i.Update))
+	i.items = append(i.items, MakeTimestampItemsSet("PST", RFC3339, time.FixedZone("PST", -8*60*60), i.Update))
 	i.Update(time.Now())
 	i.status = widget.NewLabel(fmt.Sprintf("[%s] Ready", time.Now().Format(statusTimeFormat)))
-	i.nowButton = widget.NewButton("Now", func() {
+	i.nowButton = widget.NewButton("Now !", func() {
 		i.Update(time.Now())
 	})
 	i.fromCliboardButton = widget.NewButton("From Clipboard", func() {
