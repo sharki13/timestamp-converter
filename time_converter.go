@@ -10,6 +10,28 @@ import (
 	"golang.design/x/clipboard"
 )
 
+type TimezoneDefinition struct {
+	Name string
+	Location string
+}
+
+func getLocalTimezoneName() string {
+	name, _ := time.Now().Zone()
+
+	return name
+}
+
+var Timezones = []TimezoneDefinition{
+	{"Unix", "Unix"},
+	{"UTC", "UTC"},
+	{getLocalTimezoneName(), "Local"},
+	{"HST", "Pacific/Honolulu"},
+	{"PST/PDT", "America/Los_Angeles"},
+	{"CST/CDT", "America/Chicago"},
+	{"EST/EDT", "America/New_York"},
+	{"CET/CEST", "Europe/Paris"},
+}
+
 const statusTimeFormat = "15:04:05"
 
 type TimeConverter struct {
@@ -17,25 +39,44 @@ type TimeConverter struct {
 	status *widget.Label
 	nowButton *widget.Button
 	fromCliboardButton *widget.Button
+	CurrentTimestamp time.Time
+	watchClipboard bool
+	watchClipboardCheck *widget.Check
 }
 
 func (i *TimeConverter) Make() {
 	// get local timezone shift
-	localTzName, offset := time.Now().Zone()
 	
+	
+	for _, tz := range Timezones {
+		if tz.Location == "Unix" {
+			i.items = append(i.items, MakeTimestampItemsSet(tz.Name, Unix, time.UTC, i.Update, i.SetStatus))
+		} else {
+			loc, err := time.LoadLocation(tz.Location)
+			if err != nil {
+				panic(err)
+			}
+			i.items = append(i.items, MakeTimestampItemsSet(tz.Name, RFC3339, loc, i.Update, i.SetStatus))
+		}
+	}
 
-	i.items = append(i.items, MakeTimestampItemsSet("Unix", Unix, time.UTC, i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet("UTC", RFC3339, time.UTC, i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet(fmt.Sprintf("Local: %s (%d:00)", localTzName, offset/3600), RFC3339, time.Local, i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet("EST (-5:00)", RFC3339, time.FixedZone("EST", -5*60*60), i.Update))
-	i.items = append(i.items, MakeTimestampItemsSet("PST (-8:00)", RFC3339, time.FixedZone("PST", -8*60*60), i.Update))
 	i.status = widget.NewLabel("")
 	i.Update(time.Now())
+	i.CurrentTimestamp = time.Now()
 	i.SetStatus("Ready")
 	i.nowButton = widget.NewButton("Now !", func() {
 		i.Update(time.Now())
 		i.SetStatus("Updated to now")
+		i.watchClipboard = false
+		i.watchClipboardCheck.SetChecked(false)
 	})
+
+	i.nowButton.Importance = widget.WarningImportance
+
+	i.watchClipboardCheck = widget.NewCheck("Watch clipboard", func(b bool) {
+		i.watchClipboard = b
+	})
+
 	i.fromCliboardButton = widget.NewButtonWithIcon("", theme.ContentPasteIcon(), func() {
 		clipboardContent := string(clipboard.Read(clipboard.FmtText))
 
@@ -58,6 +99,7 @@ func (i *TimeConverter) Update(t time.Time) {
 	for _, item := range i.items {
 		item.Update(t)
 	}
+	i.CurrentTimestamp = t
 
 	i.SetStatus("Updated")
 }
@@ -78,5 +120,5 @@ func (i *TimeConverter) ReturnStatus() fyne.CanvasObject {
 }
 
 func (i *TimeConverter) ReturnButtons() []fyne.CanvasObject {
-	return []fyne.CanvasObject{i.nowButton, i.fromCliboardButton}
+	return []fyne.CanvasObject{i.nowButton, i.fromCliboardButton, i.watchClipboardCheck}
 }

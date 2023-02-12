@@ -28,7 +28,7 @@ type TimestampItemsSet struct {
 	loc *time.Location
 }
 
-func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, timezone *time.Location, globalUpdate func(time.Time)) TimestampItemsSet {
+func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, timezone *time.Location, globalUpdate func(time.Time), setStatus func(string)) TimestampItemsSet {
 	if timezone == nil {
 		panic("timezone cannot be nil")
 	}
@@ -66,6 +66,7 @@ func MakeTimestampItemsSet(labelText string, setType TimestampItemsSetType, time
 
 	t.copyButton = widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
 		clipboard.Write(clipboard.FmtText, []byte(t.entry.Text))
+		setStatus("Copied to clipboard")
 	})
 
 	style := fyne.TextStyle{
