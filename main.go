@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/widget"
 	"golang.design/x/clipboard"
 )
 
@@ -34,24 +33,7 @@ func main() {
 	timeConverter := TimeConverter{}
 	timeConverter.Make()
 
-
-	nowButton := widget.NewButton("Now", func() {
-		timeConverter.Update(time.Now())
-	})
-
-	fromCliboardButton := widget.NewButton("From clipboard", func() {
-		clipboardContent := string(clipboard.Read(clipboard.FmtText))
-
-		t, err := PraseStringToTime(clipboardContent)
-		if err == nil {
-			timeConverter.Update(t)
-			return
-		}
-
-		timeConverter.SetStatus("Clipboard content is not a valid timestamp")
-	})
-
-	content := container.New(layout.NewVBoxLayout(), nowButton, fromCliboardButton, container.New(layout.NewGridLayout(3), timeConverter.ReturnTimestampSets()...), timeConverter.ReturnStatus())
+	content := container.New(layout.NewVBoxLayout(), container.New(layout.NewHBoxLayout(), timeConverter.ReturnButtons()...), container.New(layout.NewGridLayout(3), timeConverter.ReturnTimestampSets()...), timeConverter.ReturnStatus())
 
 	mainWindow.SetContent(content)
 	mainWindow.ShowAndRun()
