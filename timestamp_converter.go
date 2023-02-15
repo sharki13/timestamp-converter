@@ -212,7 +212,7 @@ func GetThemeMenu(app fyne.App) *fyne.MenuItem {
 	return themeSubMenu
 }
 
-func (t *TimestampConverter) SetContent(window fyne.Window, app fyne.App) {
+func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.Status = binding.NewString()
 	t.SetStatus("Ready")
 	t.VisibleChanger = make(map[int]binding.Bool)
@@ -316,4 +316,6 @@ func (t *TimestampConverter) SetContent(window fyne.Window, app fyne.App) {
 
 	window.SetMainMenu(menu)
 	window.SetContent(container)
+	window.Resize(fyne.NewSize(600, 10))
+	window.ShowAndRun()
 }
