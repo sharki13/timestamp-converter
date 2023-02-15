@@ -144,6 +144,11 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	})
 
 	deleteBtnLabelContainer := container.NewHBox(deleteBtn, label)
+
+	if timezone.Type == Local {
+		deleteBtn.Disable()
+	}
+
 	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, copyBtn, entry)
 
 	visibleBind := binding.NewBool()
@@ -212,6 +217,36 @@ func GetThemeMenu(app fyne.App) *fyne.MenuItem {
 	return themeSubMenu
 }
 
+func GetFormatMenu(t *TimestampConverter) *fyne.MenuItem {
+
+	formatSubMenu := fyne.NewMenuItem("Format", func() {})
+	formatSubMenu.ChildMenu = fyne.NewMenu("", make([]*fyne.MenuItem, 0)...)
+
+	for _, format := range SupportedFormats {
+		format := format
+		formatSubMenu.ChildMenu.Items = append(formatSubMenu.ChildMenu.Items, fyne.NewMenuItem(format.Label, func() {
+			t.Format.Set(format.Format)
+
+			for _, item := range formatSubMenu.ChildMenu.Items {
+				if item.Label != format.Label {
+					item.Checked = false
+				} else {
+					item.Checked = true
+				}
+			}
+		}))
+	}
+
+	if len(formatSubMenu.ChildMenu.Items) == 0 {
+		panic("no format found")
+	}
+
+	formatSubMenu.ChildMenu.Items[0].Checked = true
+	t.Format.Set(SupportedFormats[0].Format)
+
+	return formatSubMenu
+}
+
 func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.Status = binding.NewString()
 	t.SetStatus("Ready")
@@ -225,7 +260,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.Format = binding.NewString()
 	t.Format.Set(time.RFC3339)
 
-	settingsMenu := fyne.NewMenu("Settings", GetThemeMenu(app))
+	settingsMenu := fyne.NewMenu("Settings", GetThemeMenu(app), GetFormatMenu(t))
 	menu := fyne.NewMainMenu(settingsMenu)
 
 	addEntry := xwidget.NewCompletionEntry([]string{})
@@ -292,7 +327,8 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 
 	status := widget.NewLabelWithData(t.Status)
 
-	container := container.NewBorder(toolbar, status, leftSide, nil, middle)
+	scrollable := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
+	mainContainer := container.NewBorder(toolbar, status, nil, nil, scrollable)
 
 	go func() {
 		for {
@@ -315,7 +351,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	}()
 
 	window.SetMainMenu(menu)
-	window.SetContent(container)
-	window.Resize(fyne.NewSize(600, 10))
+	window.SetContent(mainContainer)
+	window.Resize(fyne.NewSize(600, 400))
 	window.ShowAndRun()
 }
