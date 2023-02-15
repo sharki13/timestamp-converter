@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"net/url"
+	"runtime"
 	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
@@ -288,7 +291,8 @@ func GetPresetsMenu(t *TimestampConverter) *fyne.MenuItem {
 		panic("no presets found")
 	}
 
-	presetsSubMenu.ChildMenu.Items[0].Checked = true
+	presetsSubMenu.ChildMenu.Items[1].Checked = true
+	presetsSubMenu.ChildMenu.Items[1].Action()
 
 	return presetsSubMenu
 }
@@ -305,9 +309,6 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 
 	t.Format = binding.NewString()
 	t.Format.Set(time.RFC3339)
-
-	settingsMenu := fyne.NewMenu("Settings", GetThemeMenu(app), GetFormatMenu(t), GetPresetsMenu(t))
-	menu := fyne.NewMainMenu(settingsMenu)
 
 	addEntry := xwidget.NewCompletionEntry([]string{})
 	addEntry.PlaceHolder = "Add"
@@ -352,10 +353,11 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 			}
 
 			t.Timestamp.Set(timestamp.Unix())
+			t.SetStatus("Updated to clipboard content")
 		}),
 	}
 
-	toolbar := container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), addEntry)
+	toolbar := container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), widget.NewLabel(""))
 
 	leftSide := container.NewVBox()
 	middle := container.NewVBox()
@@ -373,8 +375,8 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 
 	status := widget.NewLabelWithData(t.Status)
 
-	scrollable := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
-	mainContainer := container.NewBorder(toolbar, status, nil, nil, scrollable)
+	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
+	mainContainer := container.NewBorder(toolbar, status, nil, nil, scrollableMiddle)
 
 	go func() {
 		for {
@@ -404,6 +406,35 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 			}
 		}
 	}()
+
+	about := fyne.NewMenuItem("GitHub page", func() {
+		u, _ := url.Parse("https://github.com/sharki13/timestamp-converter")
+		_ = app.OpenURL(u)
+	})
+
+	infoMenu := fyne.NewMenu("Info", about)
+
+	openSettings := func() {
+		w := app.NewWindow("Scale and Appearance")
+		w.SetContent(settings.NewSettings().LoadAppearanceScreen(w))
+		w.Resize(fyne.NewSize(480, 480))
+		w.Show()
+	}
+	settingsItem := fyne.NewMenuItem("Scale and Appearance", openSettings)
+	settingsItem.Icon = theme.SettingsIcon()
+
+	settingsMenu := fyne.NewMenu("Settings", settingsItem, GetThemeMenu(app), GetFormatMenu(t), GetPresetsMenu(t))
+	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
+
+	if runtime.GOOS != "darwin" {
+		fileMenu := fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
+			app.Quit()
+		}))
+
+		menu.Items = append(menu.Items, fileMenu)
+	}
+
+	menu.Items = append(menu.Items, settingsMenu, infoMenu)
 
 	window.SetMainMenu(menu)
 	window.SetContent(mainContainer)
