@@ -250,7 +250,7 @@ func GetFormatMenu(t *TimestampConverter) *fyne.MenuItem {
 	return formatSubMenu
 }
 
-func contains(s []int, e int) bool {
+func contains[K comparable](s []K, e K) bool {
 	for _, a := range s {
 		if a == e {
 			return true
