@@ -390,6 +390,15 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 					continue
 				}
 
+				currentTimestamp, err := t.Timestamp.Get()
+				if err != nil {
+					panic(err)
+				}
+
+				if timestamp.Unix() == currentTimestamp.(int64) {
+					continue
+				}
+
 				t.Timestamp.Set(timestamp.Unix())
 				t.SetStatus("Updated from clipboard")
 			}
