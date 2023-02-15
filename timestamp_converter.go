@@ -76,7 +76,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 		new_text := ""
 
-		if timezone.Type != Unix {
+		if timezone.Type != UnixTimezoneType {
 			new_text = timestamp.In(loc).Format(format)
 		} else {
 			new_text = strconv.FormatInt(timestamp.Unix(), 10)
@@ -89,7 +89,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	t.Timestamp.AddListener(entryListener)
 
 	entryOnFormatChanged := binding.NewDataListener(func() {
-		if timezone.Type != Unix {
+		if timezone.Type != UnixTimezoneType {
 			format, err := t.Format.Get()
 			if err != nil {
 				panic(err)
@@ -148,7 +148,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 	deleteBtnLabelContainer := container.NewHBox(deleteBtn, label)
 
-	if timezone.Type == Local {
+	if timezone.Type == LocalTimezoneType {
 		deleteBtn.Disable()
 	}
 
@@ -266,13 +266,9 @@ func GetPresetsMenu(t *TimestampConverter) *fyne.MenuItem {
 	for _, preset := range TimezonePresets {
 		preset := preset
 		presetsSubMenu.ChildMenu.Items = append(presetsSubMenu.ChildMenu.Items, fyne.NewMenuItem(preset.Label, func() {
-			for _, item := range Timezones {
-				// check if preset.Id is present in slice item.Presets
-				if item.Presets != nil && contains(item.Presets, preset.Id) {
-					t.VisibleChanger[item.Id].Set(true)
-				} else {
-					t.VisibleChanger[item.Id].Set(false)
-				}
+
+			for _, currentTimezoneVisibility := range t.VisibleChanger {
+				currentTimezoneVisibility.Set(false)
 			}
 
 			for _, item := range presetsSubMenu.ChildMenu.Items {
@@ -280,6 +276,19 @@ func GetPresetsMenu(t *TimestampConverter) *fyne.MenuItem {
 					item.Checked = false
 				} else {
 					item.Checked = true
+				}
+			}
+
+			for _, presetDef := range TimezonePresets {
+				if presetDef.Id == preset.Id {
+					for _, id := range presetDef.Timezones {
+						// check if id key exists
+						if _, ok := t.VisibleChanger[id]; !ok {
+							continue
+						}
+
+						t.VisibleChanger[id].Set(true)
+					}
 				}
 			}
 

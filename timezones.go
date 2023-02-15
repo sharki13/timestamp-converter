@@ -3,9 +3,9 @@ package main
 type TimezoneType int
 
 const (
-	Local TimezoneType = iota
-	WithLocation
-	Unix
+	LocalTimezoneType TimezoneType = iota
+	WithLocationTimzoneType
+	UnixTimezoneType
 )
 
 type TimezoneDefinition struct {
@@ -13,163 +13,168 @@ type TimezoneDefinition struct {
 	LocationAsString string
 	Label            string
 	Type             TimezoneType
-	Presets          []int
 }
 
 type TimezonePreset struct {
-	Id    int
-	Label string
+	Id        int
+	Label     string
+	Timezones []int
 }
 
 const (
-	All int = iota
-	Developer
-	US
-	Europe
-	USEurope
+	DeveloperPreset int = iota
+	USPreset
+	EuropePreset
+	USEuropePreset
+	LastInternalId
+)
+
+type TimeonzeId int
+
+const (
+	Local int = iota
+	Unix
+	HST_Pacific_Honolulu_US
+	AKST_AKDT_Alaska_US
+	PST_PDT_Pacific_US
+	MST_Mountain_US
+	CST_CDT_Central_US
+	EST_EDT_Eastern_US
+	AST_Atlantic_GD
+	GMT_BST_Greenwich_UK
+	CET_CEST_Central_Europe_France
+	EET_EEST_Eastern_Europe_Finland
+	MSK_Moscow_Russia
+	IST_India_India
+	CST_China_China
+	AEST_AEDT_Australia_Australia
+	UTC
 )
 
 var TimezonePresets = []TimezonePreset{
 	{
-		Id:    All,
-		Label: "All",
+		Id:        DeveloperPreset,
+		Label:     "Developer",
+		Timezones: []int{Local, Unix, UTC, PST_PDT_Pacific_US, CST_CDT_Central_US, CET_CEST_Central_Europe_France},
 	},
 	{
-		Id:    Developer,
-		Label: "Developer",
+		Id:        USPreset,
+		Label:     "US",
+		Timezones: []int{Local, HST_Pacific_Honolulu_US, AKST_AKDT_Alaska_US, PST_PDT_Pacific_US, MST_Mountain_US, CST_CDT_Central_US, EST_EDT_Eastern_US, AST_Atlantic_GD},
 	},
 	{
-		Id:    US,
-		Label: "US",
+		Id:        EuropePreset,
+		Label:     "Europe",
+		Timezones: []int{Local, GMT_BST_Greenwich_UK, CET_CEST_Central_Europe_France, EET_EEST_Eastern_Europe_Finland, MSK_Moscow_Russia},
 	},
 	{
-		Id:    Europe,
-		Label: "Europe",
-	},
-	{
-		Id:    USEurope,
-		Label: "US & Europe",
+		Id:        USEuropePreset,
+		Label:     "US & Europe",
+		Timezones: []int{Local, HST_Pacific_Honolulu_US, AKST_AKDT_Alaska_US, PST_PDT_Pacific_US, MST_Mountain_US, CST_CDT_Central_US, EST_EDT_Eastern_US, GMT_BST_Greenwich_UK, CET_CEST_Central_Europe_France, EET_EEST_Eastern_Europe_Finland, MSK_Moscow_Russia},
 	},
 }
 
 var Timezones = []TimezoneDefinition{
 	{
-		Id:               0,
+		Id:               Local,
 		LocationAsString: "Local",
 		Label:            "Local",
-		Type:             Local,
-		Presets:          []int{All, Developer, US, Europe, USEurope},
+		Type:             LocalTimezoneType,
 	},
 	{
-		Id:               1,
+		Id:               Unix,
 		LocationAsString: "UTC",
 		Label:            "Unix",
-		Type:             Unix,
-		Presets:          []int{All, Developer},
+		Type:             UnixTimezoneType,
 	},
 	{
-		Id:               2,
+		Id:               HST_Pacific_Honolulu_US,
 		LocationAsString: "Pacific/Honolulu",
 		Label:            "HST (Hawaii), US",
-		Type:             WithLocation,
-		Presets:          []int{All, US, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               3,
+		Id:               AKST_AKDT_Alaska_US,
 		LocationAsString: "America/Anchorage",
 		Label:            "AKST/AKDT (Alaska), US",
-		Type:             WithLocation,
-		Presets:          []int{All, US, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               4,
+		Id:               PST_PDT_Pacific_US,
 		LocationAsString: "America/Los_Angeles",
 		Label:            "PST/PDT (Pacific), US",
-		Type:             WithLocation,
-		Presets:          []int{All, Developer, US, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               5,
+		Id:               MST_Mountain_US,
 		LocationAsString: "America/Phoenix",
 		Label:            "MST (Mountain), US",
-		Type:             WithLocation,
-		Presets:          []int{All, US, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               6,
+		Id:               CST_CDT_Central_US,
 		LocationAsString: "America/Chicago",
 		Label:            "CST/CDT (Central), US",
-		Type:             WithLocation,
-		Presets:          []int{All, Developer, US, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               7,
+		Id:               EST_EDT_Eastern_US,
 		LocationAsString: "America/New_York",
 		Label:            "EST/EDT (Eastern), US",
-		Type:             WithLocation,
-		Presets:          []int{0, All, US, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               8,
+		Id:               AST_Atlantic_GD,
 		LocationAsString: "America/Grenada",
 		Label:            "AST (Atlantic), GD",
-		Type:             WithLocation,
-		Presets:          []int{All},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               9,
+		Id:               GMT_BST_Greenwich_UK,
 		LocationAsString: "Europe/London",
 		Label:            "GMT/BST (Greenwich), UK",
-		Type:             WithLocation,
-		Presets:          []int{All, Europe, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               10,
+		Id:               CET_CEST_Central_Europe_France,
 		LocationAsString: "Europe/Paris",
 		Label:            "CET/CEST (Central Europe), France",
-		Type:             WithLocation,
-		Presets:          []int{All, Developer, Europe, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               11,
+		Id:               EET_EEST_Eastern_Europe_Finland,
 		LocationAsString: "Europe/Helsinki",
 		Label:            "EET/EEST (Eastern Europe), Finland",
-		Type:             WithLocation,
-		Presets:          []int{All, Europe, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               12,
+		Id:               MSK_Moscow_Russia,
 		LocationAsString: "Europe/Moscow",
 		Label:            "MSK (Moscow), Russia",
-		Type:             WithLocation,
-		Presets:          []int{All, Europe, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               13,
+		Id:               IST_India_India,
 		LocationAsString: "Asia/Kolkata",
 		Label:            "IST (India), India",
-		Type:             WithLocation,
-		Presets:          []int{All},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               14,
+		Id:               CST_China_China,
 		LocationAsString: "Asia/Chongqing",
 		Label:            "CST (China), China",
-		Type:             WithLocation,
-		Presets:          []int{All},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               15,
+		Id:               AEST_AEDT_Australia_Australia,
 		LocationAsString: "Australia/Sydney",
 		Label:            "AEST/AEDT (Australia), Australia",
-		Type:             WithLocation,
-		Presets:          []int{All},
+		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               16,
+		Id:               UTC,
 		LocationAsString: "UTC",
 		Label:            "UTC",
-		Type:             WithLocation,
-		Presets:          []int{All, Developer, US, Europe, USEurope},
+		Type:             WithLocationTimzoneType,
 	},
 }
