@@ -247,6 +247,52 @@ func GetFormatMenu(t *TimestampConverter) *fyne.MenuItem {
 	return formatSubMenu
 }
 
+func contains(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func GetPresetsMenu(t *TimestampConverter) *fyne.MenuItem {
+	presetsSubMenu := fyne.NewMenuItem("Presets", func() {})
+	presetsSubMenu.ChildMenu = fyne.NewMenu("", make([]*fyne.MenuItem, 0)...)
+
+	for _, preset := range TimezonePresets {
+		preset := preset
+		presetsSubMenu.ChildMenu.Items = append(presetsSubMenu.ChildMenu.Items, fyne.NewMenuItem(preset.Label, func() {
+			for _, item := range Timezones {
+				// check if preset.Id is present in slice item.Presets
+				if item.Presets != nil && contains(item.Presets, preset.Id) {
+					t.VisibleChanger[item.Id].Set(true)
+				} else {
+					t.VisibleChanger[item.Id].Set(false)
+				}
+			}
+
+			for _, item := range presetsSubMenu.ChildMenu.Items {
+				if item.Label != preset.Label {
+					item.Checked = false
+				} else {
+					item.Checked = true
+				}
+			}
+
+			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
+		}))
+	}
+
+	if len(presetsSubMenu.ChildMenu.Items) == 0 {
+		panic("no presets found")
+	}
+
+	presetsSubMenu.ChildMenu.Items[0].Checked = true
+
+	return presetsSubMenu
+}
+
 func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.Status = binding.NewString()
 	t.SetStatus("Ready")
@@ -260,7 +306,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.Format = binding.NewString()
 	t.Format.Set(time.RFC3339)
 
-	settingsMenu := fyne.NewMenu("Settings", GetThemeMenu(app), GetFormatMenu(t))
+	settingsMenu := fyne.NewMenu("Settings", GetThemeMenu(app), GetFormatMenu(t), GetPresetsMenu(t))
 	menu := fyne.NewMainMenu(settingsMenu)
 
 	addEntry := xwidget.NewCompletionEntry([]string{})
