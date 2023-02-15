@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	app := app.New()
+	app := app.NewWithID("com.github.sharki13.timestamp-converter")
 
 	mainWindow := app.NewWindow("Timestamp converter")
 	timestampConverter := &TimestampConverter{}

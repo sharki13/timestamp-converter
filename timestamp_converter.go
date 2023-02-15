@@ -220,13 +220,15 @@ func GetThemeMenu(app fyne.App) *fyne.MenuItem {
 	return themeSubMenu
 }
 
-func GetFormatMenu(t *TimestampConverter) *fyne.Menu {
+func (t *TimestampConverter) GetFormatMenu(app fyne.App) *fyne.Menu {
 
 	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
 
+	savedFormat := app.Preferences().String("format")
+
 	for _, format := range SupportedFormats {
 		format := format
-		formatMenu.Items = append(formatMenu.Items, fyne.NewMenuItem(format.Label, func() {
+		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
 			t.Format.Set(format.Format)
 
 			for _, item := range formatMenu.Items {
@@ -236,15 +238,25 @@ func GetFormatMenu(t *TimestampConverter) *fyne.Menu {
 					item.Checked = true
 				}
 			}
-		}))
+
+			app.Preferences().SetString("format", format.Format)
+		})
+		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
+
+		if savedFormat == format.Format {
+			formatMenuItem.Checked = true
+			t.Format.Set(format.Format)
+		}
 	}
 
 	if len(formatMenu.Items) == 0 {
 		panic("no format found")
 	}
 
-	formatMenu.Items[0].Checked = true
-	t.Format.Set(SupportedFormats[0].Format)
+	if savedFormat == "" {
+		formatMenu.Items[0].Checked = true
+		t.Format.Set(SupportedFormats[0].Format)
+	}
 
 	return formatMenu
 }
@@ -258,13 +270,15 @@ func contains[K comparable](s []K, e K) bool {
 	return false
 }
 
-func GetPresetsMenu(t *TimestampConverter) *fyne.Menu {
+func (t *TimestampConverter) GetPresetsMenu(app fyne.App) *fyne.Menu {
 	presetsMenu := fyne.NewMenu("Presets", make([]*fyne.MenuItem, 0)...)
+
+	savedPreset := app.Preferences().Int("preset")
 
 	for _, preset := range TimezonePresets {
 		preset := preset
-		presetsMenu.Items = append(presetsMenu.Items, fyne.NewMenuItem(preset.Label, func() {
 
+		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
 			for _, currentTimezoneVisibility := range t.VisibleChanger {
 				currentTimezoneVisibility.Set(false)
 			}
@@ -291,15 +305,25 @@ func GetPresetsMenu(t *TimestampConverter) *fyne.Menu {
 			}
 
 			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
-		}))
+			app.Preferences().SetInt("preset", preset.Id)
+		})
+
+		if savedPreset == preset.Id {
+			presetsMenuItem.Checked = true
+			presetsMenuItem.Action()
+		}
+
+		presetsMenu.Items = append(presetsMenu.Items, presetsMenuItem)
 	}
 
 	if len(presetsMenu.Items) == 0 {
 		panic("no presets found")
 	}
 
-	presetsMenu.Items[0].Checked = true
-	presetsMenu.Items[0].Action()
+	if savedPreset == 0 {
+		presetsMenu.Items[0].Checked = true
+		presetsMenu.Items[0].Action()
+	}
 
 	return presetsMenu
 }
@@ -431,8 +455,8 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	settingsItem.Icon = theme.SettingsIcon()
 
 	settingsMenu := fyne.NewMenu("Settings", settingsItem, GetThemeMenu(app))
-	formatMenu := GetFormatMenu(t)
-	presetMenu := GetPresetsMenu(t)
+	formatMenu := t.GetFormatMenu(app)
+	presetMenu := t.GetPresetsMenu(app)
 	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
 
 	if runtime.GOOS != "darwin" {

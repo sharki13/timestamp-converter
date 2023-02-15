@@ -21,8 +21,10 @@ type TimezonePreset struct {
 	Timezones []int  `json:"timezones"`
 }
 
+// Id 0 is reserved for the None preset
+
 const (
-	DeveloperPreset int = iota
+	DeveloperPreset int = iota + 1
 	USPreset
 	EuropePreset
 	USEuropePreset
