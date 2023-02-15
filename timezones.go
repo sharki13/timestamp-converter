@@ -16,9 +16,9 @@ type TimezoneDefinition struct {
 }
 
 type TimezonePreset struct {
-	Id        int
-	Label     string
-	Timezones []int
+	Id        int    `json:"id"`
+	Label     string `json:"label"`
+	Timezones []int  `json:"timezones"`
 }
 
 const (

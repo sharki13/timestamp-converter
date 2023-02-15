@@ -220,17 +220,16 @@ func GetThemeMenu(app fyne.App) *fyne.MenuItem {
 	return themeSubMenu
 }
 
-func GetFormatMenu(t *TimestampConverter) *fyne.MenuItem {
+func GetFormatMenu(t *TimestampConverter) *fyne.Menu {
 
-	formatSubMenu := fyne.NewMenuItem("Format", func() {})
-	formatSubMenu.ChildMenu = fyne.NewMenu("", make([]*fyne.MenuItem, 0)...)
+	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
 
 	for _, format := range SupportedFormats {
 		format := format
-		formatSubMenu.ChildMenu.Items = append(formatSubMenu.ChildMenu.Items, fyne.NewMenuItem(format.Label, func() {
+		formatMenu.Items = append(formatMenu.Items, fyne.NewMenuItem(format.Label, func() {
 			t.Format.Set(format.Format)
 
-			for _, item := range formatSubMenu.ChildMenu.Items {
+			for _, item := range formatMenu.Items {
 				if item.Label != format.Label {
 					item.Checked = false
 				} else {
@@ -240,14 +239,14 @@ func GetFormatMenu(t *TimestampConverter) *fyne.MenuItem {
 		}))
 	}
 
-	if len(formatSubMenu.ChildMenu.Items) == 0 {
+	if len(formatMenu.Items) == 0 {
 		panic("no format found")
 	}
 
-	formatSubMenu.ChildMenu.Items[0].Checked = true
+	formatMenu.Items[0].Checked = true
 	t.Format.Set(SupportedFormats[0].Format)
 
-	return formatSubMenu
+	return formatMenu
 }
 
 func contains[K comparable](s []K, e K) bool {
@@ -259,19 +258,18 @@ func contains[K comparable](s []K, e K) bool {
 	return false
 }
 
-func GetPresetsMenu(t *TimestampConverter) *fyne.MenuItem {
-	presetsSubMenu := fyne.NewMenuItem("Presets", func() {})
-	presetsSubMenu.ChildMenu = fyne.NewMenu("", make([]*fyne.MenuItem, 0)...)
+func GetPresetsMenu(t *TimestampConverter) *fyne.Menu {
+	presetsMenu := fyne.NewMenu("Presets", make([]*fyne.MenuItem, 0)...)
 
 	for _, preset := range TimezonePresets {
 		preset := preset
-		presetsSubMenu.ChildMenu.Items = append(presetsSubMenu.ChildMenu.Items, fyne.NewMenuItem(preset.Label, func() {
+		presetsMenu.Items = append(presetsMenu.Items, fyne.NewMenuItem(preset.Label, func() {
 
 			for _, currentTimezoneVisibility := range t.VisibleChanger {
 				currentTimezoneVisibility.Set(false)
 			}
 
-			for _, item := range presetsSubMenu.ChildMenu.Items {
+			for _, item := range presetsMenu.Items {
 				if item.Label != preset.Label {
 					item.Checked = false
 				} else {
@@ -296,14 +294,14 @@ func GetPresetsMenu(t *TimestampConverter) *fyne.MenuItem {
 		}))
 	}
 
-	if len(presetsSubMenu.ChildMenu.Items) == 0 {
+	if len(presetsMenu.Items) == 0 {
 		panic("no presets found")
 	}
 
-	presetsSubMenu.ChildMenu.Items[1].Checked = true
-	presetsSubMenu.ChildMenu.Items[1].Action()
+	presetsMenu.Items[0].Checked = true
+	presetsMenu.Items[0].Action()
 
-	return presetsSubMenu
+	return presetsMenu
 }
 
 func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
@@ -421,7 +419,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		_ = app.OpenURL(u)
 	})
 
-	infoMenu := fyne.NewMenu("Info", about)
+	infoMenu := fyne.NewMenu("Help", about)
 
 	openSettings := func() {
 		w := app.NewWindow("Scale and Appearance")
@@ -432,7 +430,9 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	settingsItem := fyne.NewMenuItem("Scale and Appearance", openSettings)
 	settingsItem.Icon = theme.SettingsIcon()
 
-	settingsMenu := fyne.NewMenu("Settings", settingsItem, GetThemeMenu(app), GetFormatMenu(t), GetPresetsMenu(t))
+	settingsMenu := fyne.NewMenu("Settings", settingsItem, GetThemeMenu(app))
+	formatMenu := GetFormatMenu(t)
+	presetMenu := GetPresetsMenu(t)
 	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
 
 	if runtime.GOOS != "darwin" {
@@ -443,7 +443,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		menu.Items = append(menu.Items, fileMenu)
 	}
 
-	menu.Items = append(menu.Items, settingsMenu, infoMenu)
+	menu.Items = append(menu.Items, presetMenu, formatMenu, settingsMenu, infoMenu)
 
 	window.SetMainMenu(menu)
 	window.SetContent(mainContainer)
