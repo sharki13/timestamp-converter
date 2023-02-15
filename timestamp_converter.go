@@ -142,7 +142,14 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 	label := widget.NewLabel(timezone.Label)
 	copyBtn := widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-		window.Clipboard().SetContent(entry.Text)
+		clip := window.Clipboard()
+
+		if clip == nil {
+			t.SetStatus("Clipboard not initialized")
+			return
+		}
+
+		clip.SetContent(entry.Text)
 		t.SetStatus("Copied to clipboard")
 	})
 
@@ -372,7 +379,14 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	rightSideToolbarItems := []fyne.CanvasObject{
 		widget.NewCheck("Watch clipboard", func(checked bool) { t.WachClipboard = checked }),
 		widget.NewButtonWithIcon("", theme.ContentPasteIcon(), func() {
-			clipboardContent := window.Clipboard().Content()
+			clip := window.Clipboard()
+
+			if clip == nil {
+				t.SetStatus("Clipboard not initialized")
+				return
+			}
+
+			clipboardContent := clip.Content()
 			if clipboardContent == "" {
 				return
 			}
@@ -413,7 +427,13 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		for {
 			time.Sleep(time.Second)
 			if t.WachClipboard {
-				cliboardContent := window.Clipboard().Content()
+				clip := window.Clipboard()
+
+				if clip == nil {
+					continue
+				}
+
+				cliboardContent := clip.Content()
 				if cliboardContent == "" {
 					continue
 				}
