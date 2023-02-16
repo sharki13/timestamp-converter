@@ -101,13 +101,10 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 
 	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
 
-	savedFormat := app.Preferences().String("format")
-
 	for _, format := range SupportedFormats {
 		format := format
 		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
 			t.Format.Set(format.Format)
-			app.Preferences().SetString("format", format.Format)
 		})
 
 		t.Format.AddListener(binding.NewDataListener(func() {
@@ -123,23 +120,7 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 			}
 		}))
 
-		if savedFormat == format.Format {
-			formatMenuItem.Checked = true
-			t.Format.Set(format.Format)
-		}
-
 		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
-
-
-	}
-
-	if len(formatMenu.Items) == 0 {
-		panic("no format found")
-	}
-
-	if savedFormat == "" {
-		formatMenu.Items[0].Checked = true
-		t.Format.Set(SupportedFormats[0].Format)
 	}
 
 	return formatMenu

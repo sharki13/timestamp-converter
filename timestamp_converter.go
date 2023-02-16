@@ -32,6 +32,21 @@ func (t* TimestampConverter) CreateBindings() {
 	t.Preset = binding.NewInt()
 }
 
+func (t* TimestampConverter) BindStateToPreferences(app fyne.App) {
+	format := app.Preferences().StringWithFallback("format", time.RFC3339)
+
+	t.Format.AddListener(binding.NewDataListener(func() {
+		f, err := t.Format.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		app.Preferences().SetString("format", f)
+	}))
+
+	t.Format.Set(format)
+}
+
 type TimestampItemsSet struct {
 	DeleteBtnLabelContainer *fyne.Container
 	EntryCopyBtnContainer   *fyne.Container
@@ -187,8 +202,6 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	if err != nil {
 		panic(err)
 	}
-	
-	t.Format.Set(time.RFC3339)
 
 	addEntry := xwidget.NewCompletionEntry([]string{})
 	addEntry.PlaceHolder = "Add"
@@ -300,6 +313,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		}
 	}()
 
+	t.BindStateToPreferences(app)
 	window.SetMainMenu(t.MakeMenu(app))
 	window.SetContent(mainContainer)
 	window.Resize(fyne.NewSize(600, 400))
