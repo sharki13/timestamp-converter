@@ -14,16 +14,16 @@ import (
 
 type TimestampConverter struct {
 	TimezonesVisbleState map[int]binding.Bool
-	Timestamp      BoundTime
-	Format         binding.String
-	Status         binding.String
-	WachClipboard  bool
-	Preset         binding.Int
+	Timestamp            BoundTime
+	Format               binding.String
+	Status               binding.String
+	WatchClipboard       bool
+	Preset               binding.Int
 }
 
 // Intialize bindings, have to be called at the very beginning,
 // otherwise code might try to reach bindings that are not yet initialized
-func (t* TimestampConverter) CreateBindings() {
+func (t *TimestampConverter) CreateBindings() {
 	t.TimezonesVisbleState = make(map[int]binding.Bool)
 	t.Timestamp = NewBoundTime()
 	t.Format = binding.NewString()
@@ -32,7 +32,7 @@ func (t* TimestampConverter) CreateBindings() {
 }
 
 // Should be called after UI setup
-func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
+func (t *TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 	format := app.Preferences().StringWithFallback("format", time.RFC3339)
 
 	t.Format.AddListener(binding.NewDataListener(func() {
@@ -58,7 +58,7 @@ func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 		app.Preferences().SetInt("preset", p)
 
 		for _, e := range t.TimezonesVisbleState {
-				e.Set(false)
+			e.Set(false)
 		}
 
 		for _, presetDef := range TimezonePresets {
@@ -94,7 +94,7 @@ func (t *TimestampConverter) SetStatus(status string) {
 	t.Status.Set(fmt.Sprintf("[%s]: %s", now.Format("15:04:05"), status))
 }
 
-func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition TimezoneDefinition) {
+func (t *TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition TimezoneDefinition) {
 	onFormatOrTimestampChange := binding.NewDataListener(func() {
 		timestamp, err := t.Timestamp.Get()
 		if err != nil {
@@ -117,7 +117,7 @@ func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.
 	t.Format.AddListener(onFormatOrTimestampChange)
 }
 
-func (t* TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window fyne.Window) *widget.Button {
+func (t *TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window fyne.Window) *widget.Button {
 	return widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
 		clip := window.Clipboard()
 
@@ -159,7 +159,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	}
 
 	visibleBind := binding.NewBool()
-	
+
 	deleteBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
 		visibleBind.Set(false)
 	})
@@ -173,7 +173,6 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, t.MakeCopyButtonForEntry(entry, window), entry)
 
-	
 	visibleHandler := binding.NewDataListener(func() {
 		visible, err := visibleBind.Get()
 		if err != nil {
@@ -185,7 +184,6 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	})
 	visibleBind.AddListener(visibleHandler)
 
-
 	return TimestampItemsSet{
 		DeleteBtnLabelContainer: deleteBtnLabelContainer,
 		EntryCopyBtnContainer:   entryCopyBtnContainer,
@@ -195,7 +193,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.CreateBindings()
-	
+
 	t.SetStatus("Ready")
 	err := t.Timestamp.Set(time.Now())
 	if err != nil {
@@ -231,7 +229,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	}
 
 	rightSideToolbarItems := []fyne.CanvasObject{
-		widget.NewCheck("Watch clipboard", func(checked bool) { t.WachClipboard = checked }),
+		widget.NewCheck("Watch clipboard", func(checked bool) { t.WatchClipboard = checked }),
 		widget.NewButtonWithIcon("", theme.ContentPasteIcon(), func() {
 			clip := window.Clipboard()
 
@@ -280,7 +278,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	go func() {
 		for {
 			time.Sleep(time.Second)
-			if t.WachClipboard {
+			if t.WatchClipboard {
 				clip := window.Clipboard()
 
 				if clip == nil {
