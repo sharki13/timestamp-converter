@@ -45,6 +45,36 @@ func (t* TimestampConverter) BindStateToPreferences(app fyne.App) {
 	}))
 
 	t.Format.Set(format)
+
+	preset := app.Preferences().IntWithFallback("preset", 1)
+
+	t.Preset.AddListener(binding.NewDataListener(func() {
+		p, err := t.Preset.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		app.Preferences().SetInt("preset", p)
+
+		for _, e := range t.TimezonesVisbleState {
+				e.Set(false)
+			}
+
+		for _, presetDef := range TimezonePresets {
+			if presetDef.Id == p {
+				for _, id := range presetDef.Timezones {
+					// check if id key exists
+					if _, ok := t.TimezonesVisbleState[id]; !ok {
+						continue
+					}
+
+					t.TimezonesVisbleState[id].Set(true)
+				}
+			}
+		}
+	}))
+
+	t.Preset.Set(preset)
 }
 
 type TimestampItemsSet struct {

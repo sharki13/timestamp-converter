@@ -129,62 +129,30 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
 	presetsMenu := fyne.NewMenu("Presets", make([]*fyne.MenuItem, 0)...)
 
-	savedPreset := app.Preferences().Int("preset")
-
 	for _, preset := range TimezonePresets {
 		preset := preset
 
 		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
-			for _, e := range t.TimezonesVisbleState {
-				e.Set(false)
-			}
 
-			for _, presetDef := range TimezonePresets {
-				if presetDef.Id == preset.Id {
-					for _, id := range presetDef.Timezones {
-						// check if id key exists
-						if _, ok := t.TimezonesVisbleState[id]; !ok {
-							continue
-						}
-
-						t.TimezonesVisbleState[id].Set(true)
-					}
-				}
-			}
 
 			t.Preset.Set(preset.Id)
 			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
-			app.Preferences().SetInt("preset", preset.Id)
 		})
 
 		t.Preset.AddListener(binding.NewDataListener(func() {
-			newPreset, err := t.Preset.Get()
+			currentPreset, err := t.Preset.Get()
 			if err != nil {
 				panic(err)
 			}
 
-			if newPreset == preset.Id {
+			if currentPreset == preset.Id {
 				presetsMenuItem.Checked = true
 			} else {
 				presetsMenuItem.Checked = false
 			}
 		}))
 
-		if savedPreset == preset.Id {
-			presetsMenuItem.Checked = true
-			presetsMenuItem.Action()
-		}
-
 		presetsMenu.Items = append(presetsMenu.Items, presetsMenuItem)
-	}
-
-	if len(presetsMenu.Items) == 0 {
-		panic("no presets found")
-	}
-
-	if savedPreset == 0 {
-		presetsMenu.Items[0].Checked = true
-		presetsMenu.Items[0].Action()
 	}
 
 	return presetsMenu
