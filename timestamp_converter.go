@@ -32,7 +32,7 @@ func (t* TimestampConverter) CreateBindings() {
 	t.Preset = binding.NewInt()
 }
 
-func (t* TimestampConverter) BindStateToPreferences(app fyne.App) {
+func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 	format := app.Preferences().StringWithFallback("format", time.RFC3339)
 
 	t.Format.AddListener(binding.NewDataListener(func() {
@@ -80,7 +80,6 @@ func (t* TimestampConverter) BindStateToPreferences(app fyne.App) {
 type TimestampItemsSet struct {
 	DeleteBtnLabelContainer *fyne.Container
 	EntryCopyBtnContainer   *fyne.Container
-	Checkbox                *widget.Check
 	Visible                 binding.Bool
 }
 
@@ -214,12 +213,9 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 		visibleBind.Set(false)
 	}
 
-	checkBox := widget.NewCheckWithData(timezone.Label, visibleBind)
-
 	return TimestampItemsSet{
 		DeleteBtnLabelContainer: deleteBtnLabelContainer,
 		EntryCopyBtnContainer:   entryCopyBtnContainer,
-		Checkbox:                checkBox,
 		Visible:                 visibleBind,
 	}
 }
@@ -343,7 +339,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		}
 	}()
 
-	t.BindStateToPreferences(app)
+	t.BindStateToPreferencesAndUI(app)
 	window.SetMainMenu(t.MakeMenu(app))
 	window.SetContent(mainContainer)
 	window.Resize(fyne.NewSize(600, 400))
