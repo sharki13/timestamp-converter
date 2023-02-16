@@ -20,6 +20,16 @@ type TimestampConverter struct {
 	Status               binding.String
 	WatchClipboard       bool
 	Preset               binding.Int
+	window               fyne.Window
+	app                  fyne.App
+	presetMenu 	         *fyne.Menu
+}
+
+func NewTimestampConverter(app fyne.App) *TimestampConverter {
+	return &TimestampConverter{
+		app: app,
+		window: app.NewWindow("Timestamp converter"),
+	}
 }
 
 // Intialize bindings, have to be called at the very beginning,
@@ -294,10 +304,16 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 		}),
 	}
 
-	return container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
+	debugBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+		t.presetMenu = t.MakeFormatMenu(t.app)
+		t.window.MainMenu().Refresh()
+	})
+
+
+	return container.NewBorder(debugBtn, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
 }
 
-func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
+func (t *TimestampConverter) SetupAndRun() {
 	t.CreateBindings()
 	t.Timestamp.Set(time.Now())
 
@@ -308,7 +324,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	middle := container.NewVBox()
 
 	for _, timezone := range Timezones {
-		items := t.NewTimestampSetItems(timezone, window)
+		items := t.NewTimestampSetItems(timezone, t.window)
 
 		leftSide.Add(items.DeleteBtnLabelContainer)
 		middle.Add(items.EntryCopyBtnContainer)
@@ -319,13 +335,13 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	}
 
 	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
-	mainContainer := container.NewBorder(t.NewToolbar(window), status, nil, nil, scrollableMiddle)
+	mainContainer := container.NewBorder(t.NewToolbar(t.window), status, nil, nil, scrollableMiddle)
 
 	go func() {
 		for {
 			time.Sleep(time.Second)
 			if t.WatchClipboard {
-				clip := window.Clipboard()
+				clip := t.window.Clipboard()
 
 				if clip == nil {
 					continue
@@ -356,9 +372,9 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		}
 	}()
 
-	t.BindStateToPreferencesAndUI(app)
-	window.SetMainMenu(t.MakeMenu(app))
-	window.SetContent(mainContainer)
-	window.Resize(fyne.NewSize(600, 400))
-	window.ShowAndRun()
+	t.BindStateToPreferencesAndUI(t.app)
+	t.window.SetMainMenu(t.MakeMenu(t.app))
+	t.window.SetContent(mainContainer)
+	t.window.Resize(fyne.NewSize(600, 400))
+	t.window.ShowAndRun()
 }

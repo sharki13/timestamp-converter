@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"runtime"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 )
 
 func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
@@ -24,8 +27,10 @@ func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 		menus = append(menus, fileMenu)
 	}
 
+	t.presetMenu = t.MakePresetMenu()
+
 	menus = append(menus,
-		t.MakePresetMenu(app),
+		t.presetMenu,
 		t.MakeFormatMenu(app),
 		t.MakeSettingsMenu(app),
 		t.MakeInfoMenu(app),
@@ -125,8 +130,8 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 	return formatMenu
 }
 
-func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
-	presetsMenu := fyne.NewMenu("Presets", make([]*fyne.MenuItem, 0)...)
+func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
+	items := make([]*fyne.MenuItem, 0)
 
 	for _, preset := range TimezonePresets {
 		preset := preset
@@ -148,8 +153,51 @@ func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
 			}
 		}))
 
-		presetsMenu.Items = append(presetsMenu.Items, presetsMenuItem)
+		items = append(items, presetsMenuItem)
 	}
 
-	return presetsMenu
+	noneItem := fyne.NewMenuItem("(None)", func() {})
+	noneItem.Disabled = true
+
+	addPereset := fyne.NewMenuItem("Add current as preset", t.MakeAndShowAddPresetWindow)
+
+	removePreset := fyne.NewMenuItem("Remove current preset", func() {
+		fmt.Printf("Remove current preset")
+	})
+
+	removePreset.Disabled = true
+
+	items = append(items, fyne.NewMenuItemSeparator(), noneItem ,addPereset, removePreset)
+
+	return fyne.NewMenu("Presets", items...)
+}
+
+func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
+	w := t.app.NewWindow("Add Preset")
+
+	presetName := widget.NewEntry()
+	okBtn := widget.NewButton("OK", func() {
+		fmt.Print(presetName.Text)
+		w.Close()
+	})
+	okBtn.Importance = widget.HighImportance
+	okBtn.Icon = theme.ConfirmIcon()
+
+	cancelBtn := widget.NewButton("Cancel", func() {
+		w.Close()
+	})
+
+	cancelBtn.Icon = theme.CancelIcon()
+
+	w.SetContent(container.NewVBox(
+		widget.NewLabel("Enter preset name"),
+		presetName,
+		container.NewCenter(container.NewHBox(container.NewMax(okBtn), cancelBtn)),
+	))
+
+
+	w.SetIcon(theme.ContentAddIcon())
+	w.Resize(fyne.NewSize(480, 10))
+	w.SetFixedSize(true)
+	w.Show()
 }
