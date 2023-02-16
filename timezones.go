@@ -13,11 +13,11 @@ const (
 	UnixTimezoneType
 )
 
-func (tt TimezoneType) String(t time.Time, format string, loc *time.Location) string {
-	if tt == UnixTimezoneType {
+func (tt TimezoneDefinition) String(t time.Time, format string) string {
+	if tt.Type == UnixTimezoneType {
 		return strconv.FormatInt(t.Unix(), 10)
 	} else {
-		return t.In(loc).Format(format)
+		return t.In(tt.Location()).Format(format)
 	}
 }
 
@@ -26,6 +26,15 @@ type TimezoneDefinition struct {
 	LocationAsString string
 	Label            string
 	Type             TimezoneType
+}
+
+func (td TimezoneDefinition) Location() *time.Location {
+	loc, err := time.LoadLocation(td.LocationAsString)
+	if err != nil {
+		panic(err)
+	}
+
+	return loc
 }
 
 type TimezonePreset struct {

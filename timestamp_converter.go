@@ -90,15 +90,7 @@ func (t *TimestampConverter) SetStatus(status string) {
 	t.Status.Set(fmt.Sprintf("[%s]: %s", now.Format("15:04:05"), status))
 }
 
-func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, window fyne.Window) TimestampItemsSet {
-	deleteBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), nil)
-	entry := widget.NewEntry()
-
-	loc, err := time.LoadLocation(timezone.LocationAsString)
-	if err != nil {
-		panic(err)
-	}
-
+func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition TimezoneDefinition) {
 	onFormatOrTimestampChange := binding.NewDataListener(func() {
 		timestampInt64, err := t.Timestamp.Get()
 		if err != nil {
@@ -112,7 +104,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 		timestamp := time.Unix(timestampInt64.(int64), 0)
 
-		new_text := timezone.Type.String(timestamp, format, loc)
+		new_text := timezoneDefinition.String(timestamp, format)
 
 		if new_text != entry.Text {
 			entry.SetText(new_text)
@@ -121,6 +113,24 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 	t.Timestamp.AddListener(onFormatOrTimestampChange)
 	t.Format.AddListener(onFormatOrTimestampChange)
+}
+
+func (t* TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window fyne.Window) *widget.Button {
+	return widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
+		clip := window.Clipboard()
+
+		if clip == nil {
+			return
+		}
+
+		clip.SetContent(entry.Text)
+		t.SetStatus("Copied to clipboard")
+	})
+}
+
+func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, window fyne.Window) TimestampItemsSet {
+	entry := widget.NewEntry()
+	t.AttachEntryToFormatOrTimestampChange(entry, timezone)
 
 	entry.OnChanged = func(text string) {
 		timestamp, err := PraseStringToTime(text)
@@ -150,28 +160,22 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 		}
 	}
 
-	label := widget.NewLabel(timezone.Label)
-	copyBtn := widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-		clip := window.Clipboard()
-
-		if clip == nil {
-			t.SetStatus("Clipboard not initialized")
-			return
-		}
-
-		clip.SetContent(entry.Text)
-		t.SetStatus("Copied to clipboard")
+	visibleBind := binding.NewBool()
+	
+	deleteBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+		visibleBind.Set(false)
 	})
-
-	deleteBtnLabelContainer := container.NewHBox(deleteBtn, label)
 
 	if timezone.Type == LocalTimezoneType {
 		deleteBtn.Disable()
 	}
 
-	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, copyBtn, entry)
+	label := widget.NewLabel(timezone.Label)
+	deleteBtnLabelContainer := container.NewHBox(deleteBtn, label)
 
-	visibleBind := binding.NewBool()
+	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, t.MakeCopyButtonForEntry(entry, window), entry)
+
+	
 	visibleHandler := binding.NewDataListener(func() {
 		visible, err := visibleBind.Get()
 		if err != nil {
@@ -183,9 +187,6 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	})
 	visibleBind.AddListener(visibleHandler)
 
-	deleteBtn.OnTapped = func() {
-		visibleBind.Set(false)
-	}
 
 	return TimestampItemsSet{
 		DeleteBtnLabelContainer: deleteBtnLabelContainer,
