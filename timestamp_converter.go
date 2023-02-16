@@ -77,6 +77,10 @@ func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 	}))
 
 	t.Preset.Set(preset)
+
+	t.Timestamp.AddListener(binding.NewDataListener(func() {
+		t.SetStatus("Timestamp updated")
+	}))
 }
 
 type TimestampItemsSet struct {
@@ -151,7 +155,6 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 		if currentTimestamp != timestamp {
 			t.Timestamp.Set(timestamp)
-			t.SetStatus("Timestamp updated")
 		}
 	}
 
@@ -249,7 +252,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 			}
 
 			t.Timestamp.Set(timestamp)
-			t.SetStatus("Updated to clipboard content")
+			t.SetStatus("Updated from clipboard")
 		}),
 	}
 

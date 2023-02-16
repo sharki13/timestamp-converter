@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/url"
 	"runtime"
 
@@ -134,7 +133,6 @@ func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
 
 		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
 			t.Preset.Set(preset.Id)
-			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
 		})
 
 		t.Preset.AddListener(binding.NewDataListener(func() {
