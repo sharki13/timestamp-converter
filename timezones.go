@@ -13,19 +13,19 @@ const (
 	UnixTimezoneType
 )
 
-func (tt TimezoneDefinition) String(t time.Time, format string) string {
-	if tt.Type == UnixTimezoneType {
-		return strconv.FormatInt(t.Unix(), 10)
-	} else {
-		return t.In(tt.Location()).Format(format)
-	}
-}
-
 type TimezoneDefinition struct {
 	Id               int
 	LocationAsString string
 	Label            string
 	Type             TimezoneType
+}
+
+func (tt TimezoneDefinition) StringTime(t time.Time, format string) string {
+	if tt.Type == UnixTimezoneType {
+		return strconv.FormatInt(t.Unix(), 10)
+	} else {
+		return t.In(tt.Location()).Format(format)
+	}
 }
 
 func (td TimezoneDefinition) Location() *time.Location {

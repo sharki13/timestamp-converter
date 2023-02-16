@@ -104,7 +104,7 @@ func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.
 
 		timestamp := time.Unix(timestampInt64.(int64), 0)
 
-		new_text := timezoneDefinition.String(timestamp, format)
+		new_text := timezoneDefinition.StringTime(timestamp, format)
 
 		if new_text != entry.Text {
 			entry.SetText(new_text)
