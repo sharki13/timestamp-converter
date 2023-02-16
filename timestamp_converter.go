@@ -131,7 +131,7 @@ func (t *TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window 
 	})
 }
 
-func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, window fyne.Window) TimestampItemsSet {
+func (t *TimestampConverter) NewTimestampSetItems(timezone TimezoneDefinition, window fyne.Window) TimestampItemsSet {
 	entry := widget.NewEntry()
 	t.AttachEntryToFormatOrTimestampChange(entry, timezone)
 
@@ -142,6 +142,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 			return
 		}
 
+		// due to issues with parsing time by Go, expierementally found that
 		min_allowed_epoch := int64(0 - (50 * 31556926))
 
 		if timestamp.Unix() <= min_allowed_epoch {
@@ -192,17 +193,9 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	}
 }
 
-func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
-	t.CreateBindings()
-
-	t.SetStatus("Ready")
-	err := t.Timestamp.Set(time.Now())
-	if err != nil {
-		panic(err)
-	}
-
-	addEntry := xwidget.NewCompletionEntry([]string{})
-	addEntry.PlaceHolder = "Add"
+func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
+	entry := xwidget.NewCompletionEntry([]string{})
+	entry.PlaceHolder = "Add"
 
 	getOptions := func(text string) []string {
 		options := []string{}
@@ -225,15 +218,14 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		return options
 	}
 
-	addEntry.OnChanged = func(timezone string) {
+	entry.OnChanged = func(timezone string) {
 		options := getOptions(timezone)
 
-		addEntry.SetOptions(options)
-		addEntry.ShowCompletion()
+		entry.SetOptions(options)
+		entry.ShowCompletion()
 	}
 
-	addEntry.OnSubmitted = func(timezone string) {
-
+	entry.OnSubmitted = func(timezone string) {
 		options := getOptions(timezone)
 
 		if len(options) != 0 {
@@ -245,11 +237,15 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 			}
 
 			t.SetStatus(fmt.Sprintf("Added %s", options[0]))
-			addEntry.SetText("")
-			addEntry.HideCompletion()
+			entry.SetText("")
+			entry.HideCompletion()
 		}
 	}
 
+	return entry
+}
+
+func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 	nowBtn := widget.NewButtonWithIcon("Now", theme.ViewRefreshIcon(), func() {
 		t.Timestamp.Set(time.Now())
 		t.SetStatus("Updated to now")
@@ -286,13 +282,21 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		}),
 	}
 
-	toolbar := container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), addEntry)
+	return container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
+}
+
+func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
+	t.CreateBindings()
+	t.Timestamp.Set(time.Now())
+
+	status := widget.NewLabelWithData(t.Status)
+	t.SetStatus("Ready")
 
 	leftSide := container.NewVBox()
 	middle := container.NewVBox()
 
 	for _, timezone := range Timezones {
-		items := t.MakeTimestampSetItmes(timezone, window)
+		items := t.NewTimestampSetItems(timezone, window)
 
 		leftSide.Add(items.DeleteBtnLabelContainer)
 		middle.Add(items.EntryCopyBtnContainer)
@@ -302,10 +306,8 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		t.TimezonesVisbleState[timezone.Id] = items.Visible
 	}
 
-	status := widget.NewLabelWithData(t.Status)
-
 	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
-	mainContainer := container.NewBorder(toolbar, status, nil, nil, scrollableMiddle)
+	mainContainer := container.NewBorder(t.NewToolbar(window), status, nil, nil, scrollableMiddle)
 
 	go func() {
 		for {
