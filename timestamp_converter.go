@@ -2,13 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/url"
-	"runtime"
 	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
@@ -17,11 +14,22 @@ import (
 )
 
 type TimestampConverter struct {
-	VisibleChanger map[int]binding.Bool
+	TimezonesVisbleState map[int]binding.Bool
 	Timestamp      binding.Untyped
 	Format         binding.String
 	Status         binding.String
 	WachClipboard  bool
+	Preset         binding.Int
+}
+
+// Intialize bindings, have to be called at the very beginning,
+// otherwise code might try to reach bindings that are not yet initialized
+func (t* TimestampConverter) CreateBindings() {
+	t.TimezonesVisbleState = make(map[int]binding.Bool)
+	t.Timestamp = binding.NewUntyped()
+	t.Format = binding.NewString()
+	t.Status = binding.NewString()
+	t.Preset = binding.NewInt()
 }
 
 type TimestampItemsSet struct {
@@ -29,22 +37,6 @@ type TimestampItemsSet struct {
 	EntryCopyBtnContainer   *fyne.Container
 	Checkbox                *widget.Check
 	Visible                 binding.Bool
-}
-
-func PraseStringToTime(s string) (time.Time, error) {
-	for _, format := range SupportedFormats {
-		t, err := time.Parse(format.Format, s)
-		if err == nil {
-			return t, nil
-		}
-	}
-
-	intT, err := strconv.ParseInt(s, 10, 64)
-	if err == nil {
-		return time.Unix(intT, 0), nil
-	}
-
-	return time.Time{}, fmt.Errorf("invalid time format")
 }
 
 func (t *TimestampConverter) SetStatus(status string) {
@@ -187,86 +179,9 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	}
 }
 
-func GetThemeMenu(app fyne.App) *fyne.MenuItem {
-	system := fyne.NewMenuItem("System", nil)
-	light := fyne.NewMenuItem("Light", nil)
-	dark := fyne.NewMenuItem("Dark", nil)
 
-	if app.Settings().Theme() == theme.LightTheme() {
-		light.Checked = true
-	} else if app.Settings().Theme() == theme.DarkTheme() {
-		dark.Checked = true
-	} else {
-		system.Checked = true
-	}
 
-	light.Action = func() {
-		app.Settings().SetTheme(theme.LightTheme())
-		light.Checked = true
-		dark.Checked = false
-		system.Checked = false
-	}
 
-	dark.Action = func() {
-		app.Settings().SetTheme(theme.DarkTheme())
-		light.Checked = false
-		dark.Checked = true
-		system.Checked = false
-	}
-
-	system.Action = func() {
-		app.Settings().SetTheme(theme.DefaultTheme())
-		light.Checked = false
-		dark.Checked = false
-		system.Checked = true
-	}
-
-	themeSubMenu := fyne.NewMenuItem("Theme", func() {})
-	themeSubMenu.ChildMenu = fyne.NewMenu("", system, fyne.NewMenuItemSeparator(), light, dark)
-
-	return themeSubMenu
-}
-
-func (t *TimestampConverter) GetFormatMenu(app fyne.App) *fyne.Menu {
-
-	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
-
-	savedFormat := app.Preferences().String("format")
-
-	for _, format := range SupportedFormats {
-		format := format
-		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
-			t.Format.Set(format.Format)
-
-			for _, item := range formatMenu.Items {
-				if item.Label != format.Label {
-					item.Checked = false
-				} else {
-					item.Checked = true
-				}
-			}
-
-			app.Preferences().SetString("format", format.Format)
-		})
-		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
-
-		if savedFormat == format.Format {
-			formatMenuItem.Checked = true
-			t.Format.Set(format.Format)
-		}
-	}
-
-	if len(formatMenu.Items) == 0 {
-		panic("no format found")
-	}
-
-	if savedFormat == "" {
-		formatMenu.Items[0].Checked = true
-		t.Format.Set(SupportedFormats[0].Format)
-	}
-
-	return formatMenu
-}
 
 func contains[K comparable](s []K, e K) bool {
 	for _, a := range s {
@@ -277,75 +192,17 @@ func contains[K comparable](s []K, e K) bool {
 	return false
 }
 
-func (t *TimestampConverter) GetPresetsMenu(app fyne.App) *fyne.Menu {
-	presetsMenu := fyne.NewMenu("Presets", make([]*fyne.MenuItem, 0)...)
 
-	savedPreset := app.Preferences().Int("preset")
-
-	for _, preset := range TimezonePresets {
-		preset := preset
-
-		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
-			for _, currentTimezoneVisibility := range t.VisibleChanger {
-				currentTimezoneVisibility.Set(false)
-			}
-
-			for _, item := range presetsMenu.Items {
-				if item.Label != preset.Label {
-					item.Checked = false
-				} else {
-					item.Checked = true
-				}
-			}
-
-			for _, presetDef := range TimezonePresets {
-				if presetDef.Id == preset.Id {
-					for _, id := range presetDef.Timezones {
-						// check if id key exists
-						if _, ok := t.VisibleChanger[id]; !ok {
-							continue
-						}
-
-						t.VisibleChanger[id].Set(true)
-					}
-				}
-			}
-
-			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
-			app.Preferences().SetInt("preset", preset.Id)
-		})
-
-		if savedPreset == preset.Id {
-			presetsMenuItem.Checked = true
-			presetsMenuItem.Action()
-		}
-
-		presetsMenu.Items = append(presetsMenu.Items, presetsMenuItem)
-	}
-
-	if len(presetsMenu.Items) == 0 {
-		panic("no presets found")
-	}
-
-	if savedPreset == 0 {
-		presetsMenu.Items[0].Checked = true
-		presetsMenu.Items[0].Action()
-	}
-
-	return presetsMenu
-}
 
 func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
-	t.Status = binding.NewString()
+	t.CreateBindings()
+	
 	t.SetStatus("Ready")
-	t.VisibleChanger = make(map[int]binding.Bool)
-	t.Timestamp = binding.NewUntyped()
 	err := t.Timestamp.Set(time.Now().Unix())
 	if err != nil {
 		panic(err)
 	}
-
-	t.Format = binding.NewString()
+	
 	t.Format.Set(time.RFC3339)
 
 	addEntry := xwidget.NewCompletionEntry([]string{})
@@ -415,7 +272,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		items.Visible.Set(true)
 
 		// add to visible changer
-		t.VisibleChanger[timezone.Id] = items.Visible
+		t.TimezonesVisbleState[timezone.Id] = items.Visible
 	}
 
 	status := widget.NewLabelWithData(t.Status)
@@ -458,38 +315,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		}
 	}()
 
-	about := fyne.NewMenuItem("GitHub page", func() {
-		u, _ := url.Parse("https://github.com/sharki13/timestamp-converter")
-		_ = app.OpenURL(u)
-	})
-
-	infoMenu := fyne.NewMenu("Help", about)
-
-	openSettings := func() {
-		w := app.NewWindow("Scale and Appearance")
-		w.SetContent(settings.NewSettings().LoadAppearanceScreen(w))
-		w.Resize(fyne.NewSize(480, 480))
-		w.Show()
-	}
-	settingsItem := fyne.NewMenuItem("Scale and Appearance", openSettings)
-	settingsItem.Icon = theme.SettingsIcon()
-
-	settingsMenu := fyne.NewMenu("Settings", settingsItem, GetThemeMenu(app))
-	formatMenu := t.GetFormatMenu(app)
-	presetMenu := t.GetPresetsMenu(app)
-	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
-
-	if runtime.GOOS != "darwin" {
-		fileMenu := fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
-			app.Quit()
-		}))
-
-		menu.Items = append(menu.Items, fileMenu)
-	}
-
-	menu.Items = append(menu.Items, presetMenu, formatMenu, settingsMenu, infoMenu)
-
-	window.SetMainMenu(menu)
+	window.SetMainMenu(t.MakeMenu(app))
 	window.SetContent(mainContainer)
 	window.Resize(fyne.NewSize(600, 400))
 	window.ShowAndRun()
