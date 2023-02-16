@@ -7,7 +7,7 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-func (t* TimestampConverter) FetchUserPresents(app fyne.App) []TimezonePreset {
+func (t *TimestampConverter) FetchUserPresents(app fyne.App) []TimezonePreset {
 	ret := make([]TimezonePreset, 0)
 
 	presets := app.Preferences().StringWithFallback("presets", "[]")
@@ -21,13 +21,13 @@ func (t* TimestampConverter) FetchUserPresents(app fyne.App) []TimezonePreset {
 	return ret
 }
 
-func (t* TimestampConverter) SaveUserPresents(app fyne.App, presets []TimezonePreset) {
+func (t *TimestampConverter) SaveUserPresents(app fyne.App, presets []TimezonePreset) error {
 	presetsJson, err := json.Marshal(presets)
 	if err != nil {
 		t.SetStatus(fmt.Sprintf("Error saving presets: %s", err))
-		return
+		return err
 	}
 
 	app.Preferences().SetString("presets", string(presetsJson))
+	return nil
 }
-
