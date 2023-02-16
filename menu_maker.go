@@ -7,6 +7,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 )
 
@@ -106,23 +107,30 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 		format := format
 		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
 			t.Format.Set(format.Format)
-
-			for _, item := range formatMenu.Items {
-				if item.Label != format.Label {
-					item.Checked = false
-				} else {
-					item.Checked = true
-				}
-			}
-
 			app.Preferences().SetString("format", format.Format)
 		})
-		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
+
+		t.Format.AddListener(binding.NewDataListener(func() {
+			currentFormat, err := t.Format.Get()
+			if err != nil {
+				panic(err)
+			}
+
+			if currentFormat == format.Format {
+				formatMenuItem.Checked = true
+			} else {
+				formatMenuItem.Checked = false
+			}
+		}))
 
 		if savedFormat == format.Format {
 			formatMenuItem.Checked = true
 			t.Format.Set(format.Format)
 		}
+
+		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
+
+
 	}
 
 	if len(formatMenu.Items) == 0 {
@@ -150,14 +158,6 @@ func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
 				e.Set(false)
 			}
 
-			for _, item := range presetsMenu.Items {
-				if item.Label != preset.Label {
-					item.Checked = false
-				} else {
-					item.Checked = true
-				}
-			}
-
 			for _, presetDef := range TimezonePresets {
 				if presetDef.Id == preset.Id {
 					for _, id := range presetDef.Timezones {
@@ -171,9 +171,23 @@ func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
 				}
 			}
 
+			t.Preset.Set(preset.Id)
 			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
 			app.Preferences().SetInt("preset", preset.Id)
 		})
+
+		t.Preset.AddListener(binding.NewDataListener(func() {
+			newPreset, err := t.Preset.Get()
+			if err != nil {
+				panic(err)
+			}
+
+			if newPreset == preset.Id {
+				presetsMenuItem.Checked = true
+			} else {
+				presetsMenuItem.Checked = false
+			}
+		}))
 
 		if savedPreset == preset.Id {
 			presetsMenuItem.Checked = true
