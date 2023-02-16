@@ -92,7 +92,7 @@ func (t *TimestampConverter) SetStatus(status string) {
 
 func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition TimezoneDefinition) {
 	onFormatOrTimestampChange := binding.NewDataListener(func() {
-		timestampInt64, err := t.Timestamp.Get()
+		timestamp, err := t.Timestamp.Get()
 		if err != nil {
 			panic(err)
 		}
@@ -102,9 +102,7 @@ func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.
 			panic(err)
 		}
 
-		timestamp := time.Unix(timestampInt64.(int64), 0)
-
-		new_text := timezoneDefinition.StringTime(timestamp, format)
+		new_text := timezoneDefinition.StringTime(timestamp.(time.Time), format)
 
 		if new_text != entry.Text {
 			entry.SetText(new_text)
@@ -146,16 +144,15 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 			return
 		}
 
-		currentTimestamp, err := t.Timestamp.Get()
+		currentTimestampUntyped, err := t.Timestamp.Get()
 		if err != nil {
 			panic(err)
 		}
 
-		currentTimestampUnix := currentTimestamp.(int64)
-		timestampUnix := timestamp.Unix()
+		currentTimestamp := currentTimestampUntyped.(time.Time)
 
-		if currentTimestampUnix != timestampUnix {
-			t.Timestamp.Set(timestampUnix)
+		if currentTimestamp != timestamp {
+			t.Timestamp.Set(timestamp)
 			t.SetStatus("Timestamp updated")
 		}
 	}
@@ -199,7 +196,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.CreateBindings()
 	
 	t.SetStatus("Ready")
-	err := t.Timestamp.Set(time.Now().Unix())
+	err := t.Timestamp.Set(time.Now())
 	if err != nil {
 		panic(err)
 	}
@@ -223,7 +220,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	// }
 
 	nowBtn := widget.NewButtonWithIcon("Now", theme.ViewRefreshIcon(), func() {
-		t.Timestamp.Set(time.Now().Unix())
+		t.Timestamp.Set(time.Now())
 		t.SetStatus("Updated to now")
 	})
 	nowBtn.Importance = widget.HighImportance
@@ -253,7 +250,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 				return
 			}
 
-			t.Timestamp.Set(timestamp.Unix())
+			t.Timestamp.Set(timestamp)
 			t.SetStatus("Updated to clipboard content")
 		}),
 	}
@@ -299,16 +296,18 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 					continue
 				}
 
-				currentTimestamp, err := t.Timestamp.Get()
+				currentTimestampUntyped, err := t.Timestamp.Get()
 				if err != nil {
 					panic(err)
 				}
 
-				if timestamp.Unix() == currentTimestamp.(int64) {
+				currentTimestamp := currentTimestampUntyped.(time.Time)
+
+				if timestamp == currentTimestamp {
 					continue
 				}
 
-				t.Timestamp.Set(timestamp.Unix())
+				t.Timestamp.Set(timestamp)
 				t.SetStatus("Updated from clipboard")
 			}
 		}
