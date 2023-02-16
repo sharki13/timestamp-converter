@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -202,21 +203,52 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 
 	addEntry := xwidget.NewCompletionEntry([]string{})
 	addEntry.PlaceHolder = "Add"
-	// addEntry.OnChanged = func(timezone string) {
-	// 	addEntry.SetOptions(t.Timezones)
-	// 	addEntry.ShowCompletion()
-	// }
-	// addEntry.OnSubmitted = func(timezone string) {
-	// 	// check if timezone key is present in map
-	// 	for _, timeZoneDefinition := range Timezones {
-	// 		if
 
-	// 	if _, ok := t.VisibleChanger[timezone.id]; ok {
-	// 		t.VisibleChanger[timezone].Set(true)
-	// 	}
-	// 	addEntry.SetText("")
-	// 	addEntry.HideCompletion()
-	// }
+	getOptions := func(text string) []string {
+		options := []string{}
+
+		visibleIds := []int{}
+
+		for k, e := range t.TimezonesVisbleState {
+			visible, _ := e.Get()
+			if visible {
+				visibleIds = append(visibleIds, k)
+			}
+		}
+
+		for _, timeZoneDefinition := range Timezones {
+			if strings.Contains(strings.ToLower(timeZoneDefinition.Label), strings.ToLower(text)) && !contains(visibleIds, timeZoneDefinition.Id) {
+				options = append(options, timeZoneDefinition.Label)
+			}
+		}
+
+		return options
+	}
+
+	addEntry.OnChanged = func(timezone string) {
+		options := getOptions(timezone)
+
+		addEntry.SetOptions(options)
+		addEntry.ShowCompletion()
+	}
+
+	addEntry.OnSubmitted = func(timezone string) {
+
+		options := getOptions(timezone)
+
+		if len(options) != 0 {
+			for _, timeZoneDefinition := range Timezones {
+				if timeZoneDefinition.Label == options[0] {
+					t.TimezonesVisbleState[timeZoneDefinition.Id].Set(true)
+					break
+				}
+			}
+
+			t.SetStatus(fmt.Sprintf("Added %s", options[0]))
+			addEntry.SetText("")
+			addEntry.HideCompletion()
+		}
+	}
 
 	nowBtn := widget.NewButtonWithIcon("Now", theme.ViewRefreshIcon(), func() {
 		t.Timestamp.Set(time.Now())
@@ -254,7 +286,7 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 		}),
 	}
 
-	toolbar := container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), widget.NewLabel(""))
+	toolbar := container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), addEntry)
 
 	leftSide := container.NewVBox()
 	middle := container.NewVBox()
