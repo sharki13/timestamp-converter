@@ -11,13 +11,39 @@ import (
 )
 
 func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
+
+	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
+
+	// Mac OS has a built in quit menu,
+	// on other platforms Fyne will add Quit to first menu if it is not defined
+	if runtime.GOOS != "darwin" {
+		fileMenu := fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
+			app.Quit()
+		}))
+
+		menu.Items = append(menu.Items, fileMenu)
+	}
+
+	menu.Items = append(menu.Items,
+		t.MakePresetMenu(app),
+		t.MakeFormatMenu(app),
+		t.MakeSettingsMenu(app),
+		t.MakeInfoMenu(app),
+	)
+
+	return menu
+}
+
+func (t *TimestampConverter) MakeInfoMenu(app fyne.App) *fyne.Menu {
 	about := fyne.NewMenuItem("GitHub page", func() {
 		u, _ := url.Parse("https://github.com/sharki13/timestamp-converter")
 		_ = app.OpenURL(u)
 	})
 
-	infoMenu := fyne.NewMenu("Help", about)
+	return fyne.NewMenu("Help", about)
+}
 
+func (t* TimestampConverter) MakeSettingsMenu(app fyne.App) *fyne.Menu {
 	openSettings := func() {
 		w := app.NewWindow("Scale and Appearance")
 		w.SetContent(settings.NewSettings().LoadAppearanceScreen(w))
@@ -27,22 +53,7 @@ func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 	settingsItem := fyne.NewMenuItem("Scale and Appearance", openSettings)
 	settingsItem.Icon = theme.SettingsIcon()
 
-	settingsMenu := fyne.NewMenu("Settings", settingsItem, MakeThemeMenu(app))
-	formatMenu := t.MakeFormatMenu(app)
-	presetMenu := t.MakePresetMenu(app)
-	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
-
-	if runtime.GOOS != "darwin" {
-		fileMenu := fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
-			app.Quit()
-		}))
-
-		menu.Items = append(menu.Items, fileMenu)
-	}
-
-	menu.Items = append(menu.Items, presetMenu, formatMenu, settingsMenu, infoMenu)
-
-	return menu
+	return fyne.NewMenu("Settings", settingsItem, MakeThemeMenu(app))
 }
 
 func MakeThemeMenu(app fyne.App) *fyne.MenuItem {
