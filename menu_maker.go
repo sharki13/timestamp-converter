@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"runtime"
@@ -48,7 +49,7 @@ func (t *TimestampConverter) MakeInfoMenu(app fyne.App) *fyne.Menu {
 	return fyne.NewMenu("Help", about)
 }
 
-func (t* TimestampConverter) MakeSettingsMenu(app fyne.App) *fyne.Menu {
+func (t *TimestampConverter) MakeSettingsMenu(app fyne.App) *fyne.Menu {
 	openSettings := func() {
 		w := app.NewWindow("Scale and Appearance")
 		w.SetContent(settings.NewSettings().LoadAppearanceScreen(w))
@@ -61,7 +62,7 @@ func (t* TimestampConverter) MakeSettingsMenu(app fyne.App) *fyne.Menu {
 	return fyne.NewMenu("Settings", settingsItem, t.MakeThemeMenu(app))
 }
 
-func (t* TimestampConverter) MakeThemeMenu(app fyne.App) *fyne.MenuItem {
+func (t *TimestampConverter) MakeThemeMenu(app fyne.App) *fyne.MenuItem {
 	system := fyne.NewMenuItem("System", nil)
 	light := fyne.NewMenuItem("Light", nil)
 	dark := fyne.NewMenuItem("Dark", nil)
@@ -167,7 +168,7 @@ func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
 
 	removePreset.Disabled = true
 
-	items = append(items, fyne.NewMenuItemSeparator(), noneItem ,addPereset, removePreset)
+	items = append(items, fyne.NewMenuItemSeparator(), noneItem, addPereset, removePreset)
 
 	return fyne.NewMenu("Presets", items...)
 }
@@ -176,6 +177,25 @@ func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
 	w := t.app.NewWindow("Add Preset")
 
 	presetName := widget.NewEntry()
+
+	presetName.Validator = func(s string) error {
+		if len(s) == 0 {
+			return errors.New("Preset name cannot be empty")
+		}
+
+		return nil
+	}
+
+	errorLabel := widget.NewLabel("")
+
+	presetName.SetOnValidationChanged(func(err error) {
+		if err != nil {
+			errorLabel.SetText(err.Error())
+		} else {
+			errorLabel.SetText("")
+		}
+	})
+
 	okBtn := widget.NewButton("OK", func() {
 		fmt.Print(presetName.Text)
 		w.Close()
@@ -192,9 +212,9 @@ func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
 	w.SetContent(container.NewVBox(
 		widget.NewLabel("Enter preset name"),
 		presetName,
+		errorLabel,
 		container.NewCenter(container.NewHBox(container.NewMax(okBtn), cancelBtn)),
 	))
-
 
 	w.SetIcon(theme.ContentAddIcon())
 	w.Resize(fyne.NewSize(480, 10))

@@ -22,12 +22,12 @@ type TimestampConverter struct {
 	Preset               binding.Int
 	window               fyne.Window
 	app                  fyne.App
-	presetMenu 	         *fyne.Menu
+	presetMenu           *fyne.Menu
 }
 
 func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	return &TimestampConverter{
-		app: app,
+		app:    app,
 		window: app.NewWindow("Timestamp converter"),
 	}
 }
@@ -152,14 +152,6 @@ func (t *TimestampConverter) NewTimestampSetItems(timezone TimezoneDefinition, w
 			return
 		}
 
-		// due to issues with parsing time by Go, expierementally found that
-		min_allowed_epoch := int64(0 - (50 * 31556926))
-
-		if timestamp.Unix() <= min_allowed_epoch {
-			t.SetStatus("Invalid timestamp")
-			return
-		}
-
 		currentTimestamp, err := t.Timestamp.Get()
 		if err != nil {
 			panic(err)
@@ -168,6 +160,15 @@ func (t *TimestampConverter) NewTimestampSetItems(timezone TimezoneDefinition, w
 		if currentTimestamp != timestamp {
 			t.Timestamp.Set(timestamp)
 		}
+	}
+
+	entry.Validator = func(text string) error {
+		_, err := PraseStringToTime(text)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	visibleBind := binding.NewBool()
@@ -252,7 +253,6 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 		}
 	}
 
-
 	// due to bug in this widget: https://github.com/fyne-io/fyne-x/issues/38
 	entry.CustomUpdate = func(i widget.ListItemID, o fyne.CanvasObject) {
 		options := entry.Options
@@ -308,7 +308,6 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 		t.presetMenu = t.MakeFormatMenu(t.app)
 		t.window.MainMenu().Refresh()
 	})
-
 
 	return container.NewBorder(debugBtn, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
 }

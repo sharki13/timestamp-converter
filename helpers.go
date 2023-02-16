@@ -10,12 +10,16 @@ func PraseStringToTime(s string) (time.Time, error) {
 	for _, format := range SupportedFormats {
 		t, err := time.Parse(format.Format, s)
 		if err == nil {
-			return t, nil
+			if t.Unix() >= 0 {
+				return t, nil
+			} else {
+				return t, fmt.Errorf("invalid time format")
+			}
 		}
 	}
 
 	intT, err := strconv.ParseInt(s, 10, 64)
-	if err == nil {
+	if err == nil && intT >= 0 {
 		return time.Unix(intT, 0), nil
 	}
 
