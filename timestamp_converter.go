@@ -14,7 +14,7 @@ import (
 
 type TimestampConverter struct {
 	TimezonesVisbleState map[int]binding.Bool
-	Timestamp      binding.Untyped
+	Timestamp      BoundTime
 	Format         binding.String
 	Status         binding.String
 	WachClipboard  bool
@@ -25,7 +25,7 @@ type TimestampConverter struct {
 // otherwise code might try to reach bindings that are not yet initialized
 func (t* TimestampConverter) CreateBindings() {
 	t.TimezonesVisbleState = make(map[int]binding.Bool)
-	t.Timestamp = binding.NewUntyped()
+	t.Timestamp = NewBoundTime()
 	t.Format = binding.NewString()
 	t.Status = binding.NewString()
 	t.Preset = binding.NewInt()
@@ -102,7 +102,7 @@ func (t* TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.
 			panic(err)
 		}
 
-		new_text := timezoneDefinition.StringTime(timestamp.(time.Time), format)
+		new_text := timezoneDefinition.StringTime(timestamp, format)
 
 		if new_text != entry.Text {
 			entry.SetText(new_text)
@@ -144,12 +144,10 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 			return
 		}
 
-		currentTimestampUntyped, err := t.Timestamp.Get()
+		currentTimestamp, err := t.Timestamp.Get()
 		if err != nil {
 			panic(err)
 		}
-
-		currentTimestamp := currentTimestampUntyped.(time.Time)
 
 		if currentTimestamp != timestamp {
 			t.Timestamp.Set(timestamp)
@@ -296,12 +294,10 @@ func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 					continue
 				}
 
-				currentTimestampUntyped, err := t.Timestamp.Get()
+				currentTimestamp, err := t.Timestamp.Get()
 				if err != nil {
 					panic(err)
 				}
-
-				currentTimestamp := currentTimestampUntyped.(time.Time)
 
 				if timestamp == currentTimestamp {
 					continue
