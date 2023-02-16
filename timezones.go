@@ -1,5 +1,10 @@
 package main
 
+import (
+	"strconv"
+	"time"
+)
+
 type TimezoneType int
 
 const (
@@ -7,6 +12,14 @@ const (
 	WithLocationTimzoneType
 	UnixTimezoneType
 )
+
+func (tt TimezoneType) String(t time.Time, format string, loc *time.Location) string {
+	if tt == UnixTimezoneType {
+		return strconv.FormatInt(t.Unix(), 10)
+	} else {
+		return t.In(loc).Format(format)
+	}
+}
 
 type TimezoneDefinition struct {
 	Id               int

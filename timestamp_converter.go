@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -32,6 +31,7 @@ func (t* TimestampConverter) CreateBindings() {
 	t.Preset = binding.NewInt()
 }
 
+// Should be called after UI setup
 func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 	format := app.Preferences().StringWithFallback("format", time.RFC3339)
 
@@ -42,6 +42,7 @@ func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 		}
 
 		app.Preferences().SetString("format", f)
+		t.SetStatus(fmt.Sprintf("Format set to: %s", f))
 	}))
 
 	t.Format.Set(format)
@@ -58,7 +59,7 @@ func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 
 		for _, e := range t.TimezonesVisbleState {
 				e.Set(false)
-			}
+		}
 
 		for _, presetDef := range TimezonePresets {
 			if presetDef.Id == p {
@@ -70,6 +71,7 @@ func (t* TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 
 					t.TimezonesVisbleState[id].Set(true)
 				}
+				t.SetStatus(fmt.Sprintf("Preset %s", presetDef.Label))
 			}
 		}
 	}))
@@ -97,7 +99,7 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 		panic(err)
 	}
 
-	entryListener := binding.NewDataListener(func() {
+	onFormatOrTimestampChange := binding.NewDataListener(func() {
 		timestampInt64, err := t.Timestamp.Get()
 		if err != nil {
 			panic(err)
@@ -110,43 +112,15 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 
 		timestamp := time.Unix(timestampInt64.(int64), 0)
 
-		new_text := ""
+		new_text := timezone.Type.String(timestamp, format, loc)
 
-		if timezone.Type != UnixTimezoneType {
-			new_text = timestamp.In(loc).Format(format)
-		} else {
-			new_text = strconv.FormatInt(timestamp.Unix(), 10)
-		}
 		if new_text != entry.Text {
 			entry.SetText(new_text)
 		}
 	})
 
-	t.Timestamp.AddListener(entryListener)
-
-	entryOnFormatChanged := binding.NewDataListener(func() {
-		if timezone.Type != UnixTimezoneType {
-			format, err := t.Format.Get()
-			if err != nil {
-				panic(err)
-			}
-
-			timestampInt64, err := t.Timestamp.Get()
-			if err != nil {
-				panic(err)
-			}
-
-			// parse timestamp to time.Time
-			timestamp := time.Unix(timestampInt64.(int64), 0)
-
-			new_content := timestamp.In(loc).Format(format)
-			if new_content != entry.Text {
-				entry.SetText(new_content)
-			}
-		}
-	})
-
-	t.Format.AddListener(entryOnFormatChanged)
+	t.Timestamp.AddListener(onFormatOrTimestampChange)
+	t.Format.AddListener(onFormatOrTimestampChange)
 
 	entry.OnChanged = func(text string) {
 		timestamp, err := PraseStringToTime(text)

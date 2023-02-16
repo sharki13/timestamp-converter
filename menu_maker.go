@@ -133,8 +133,6 @@ func (t *TimestampConverter) MakePresetMenu(app fyne.App) *fyne.Menu {
 		preset := preset
 
 		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
-
-
 			t.Preset.Set(preset.Id)
 			t.SetStatus(fmt.Sprintf("Preset %s", preset.Label))
 		})
