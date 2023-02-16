@@ -242,6 +242,18 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 		}
 	}
 
+
+	// due to bug in this widget: https://github.com/fyne-io/fyne-x/issues/38
+	entry.CustomUpdate = func(i widget.ListItemID, o fyne.CanvasObject) {
+		options := entry.Options
+
+		if i >= len(options) {
+			return
+		}
+
+		o.(*widget.Label).SetText(options[i])
+	}
+
 	return entry
 }
 
