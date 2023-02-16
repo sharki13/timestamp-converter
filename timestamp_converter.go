@@ -179,21 +179,6 @@ func (t *TimestampConverter) MakeTimestampSetItmes(timezone TimezoneDefinition, 
 	}
 }
 
-
-
-
-
-func contains[K comparable](s []K, e K) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
-
-
 func (t *TimestampConverter) SetupAndRun(window fyne.Window, app fyne.App) {
 	t.CreateBindings()
 	

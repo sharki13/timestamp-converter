@@ -21,3 +21,12 @@ func PraseStringToTime(s string) (time.Time, error) {
 
 	return time.Time{}, fmt.Errorf("invalid time format")
 }
+
+func contains[K comparable](s []K, e K) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}

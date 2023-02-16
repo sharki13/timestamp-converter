@@ -12,7 +12,7 @@ import (
 
 func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 
-	menu := fyne.NewMainMenu(make([]*fyne.Menu, 0)...)
+	menus := make([]*fyne.Menu, 0)
 
 	// Mac OS has a built in quit menu,
 	// on other platforms Fyne will add Quit to first menu if it is not defined
@@ -21,17 +21,17 @@ func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 			app.Quit()
 		}))
 
-		menu.Items = append(menu.Items, fileMenu)
+		menus = append(menus, fileMenu)
 	}
 
-	menu.Items = append(menu.Items,
+	menus = append(menus,
 		t.MakePresetMenu(app),
 		t.MakeFormatMenu(app),
 		t.MakeSettingsMenu(app),
 		t.MakeInfoMenu(app),
 	)
 
-	return menu
+	return fyne.NewMainMenu(menus...)
 }
 
 func (t *TimestampConverter) MakeInfoMenu(app fyne.App) *fyne.Menu {
@@ -53,10 +53,10 @@ func (t* TimestampConverter) MakeSettingsMenu(app fyne.App) *fyne.Menu {
 	settingsItem := fyne.NewMenuItem("Scale and Appearance", openSettings)
 	settingsItem.Icon = theme.SettingsIcon()
 
-	return fyne.NewMenu("Settings", settingsItem, MakeThemeMenu(app))
+	return fyne.NewMenu("Settings", settingsItem, t.MakeThemeMenu(app))
 }
 
-func MakeThemeMenu(app fyne.App) *fyne.MenuItem {
+func (t* TimestampConverter) MakeThemeMenu(app fyne.App) *fyne.MenuItem {
 	system := fyne.NewMenuItem("System", nil)
 	light := fyne.NewMenuItem("Light", nil)
 	dark := fyne.NewMenuItem("Dark", nil)
