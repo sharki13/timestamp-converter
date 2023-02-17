@@ -23,50 +23,66 @@ type TimestampConverter struct {
 	window               fyne.Window
 	app                  fyne.App
 	presetMenu           *fyne.Menu
+	preferences          *PreferencesSynchronizer
 }
 
 func NewTimestampConverter(app fyne.App) *TimestampConverter {
-	return &TimestampConverter{
+	ret := TimestampConverter{
 		app:    app,
 		window: app.NewWindow("Timestamp converter"),
 	}
+
+	ret.initialize()
+
+	return &ret
 }
 
-// Intialize bindings, have to be called at the very beginning,
+// Initialize bindings, have to be called at the very beginning,
 // otherwise code might try to reach bindings that are not yet initialized
-func (t *TimestampConverter) CreateBindings() {
+func (t *TimestampConverter) initialize() {
 	t.TimezonesVisbleState = make(map[int]binding.Bool)
 	t.Timestamp = NewBoundTime()
 	t.Format = binding.NewString()
 	t.Status = binding.NewString()
 	t.Preset = binding.NewInt()
+	t.preferences = NewPreferencesSynchronizer(t.app)
+
+	t.SetupAndLoadPreferences()
+}
+
+// Sets up the preferences and loads them
+// from the fyne preferences
+// Might panic if keys are not unique
+func (t *TimestampConverter) SetupAndLoadPreferences() {
+	err := t.preferences.AddString(StringPreference{
+		Key:      "format",
+		Value:    t.Format,
+		Fallback: time.RFC3339,
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = t.preferences.AddInt(IntPreference{
+		Key:      "preset",
+		Value:    t.Preset,
+		Fallback: 1,
+	})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Should be called after UI setup
-func (t *TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
-	format := app.Preferences().StringWithFallback("format", time.RFC3339)
-
-	t.Format.AddListener(binding.NewDataListener(func() {
-		f, err := t.Format.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		app.Preferences().SetString("format", f)
-		t.SetStatus(fmt.Sprintf("Format set to: %s", f))
-	}))
-
-	t.Format.Set(format)
-
-	preset := app.Preferences().IntWithFallback("preset", 1)
+func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 
 	t.Preset.AddListener(binding.NewDataListener(func() {
 		p, err := t.Preset.Get()
 		if err != nil {
 			panic(err)
 		}
-
-		app.Preferences().SetInt("preset", p)
 
 		for _, e := range t.TimezonesVisbleState {
 			e.Set(false)
@@ -86,8 +102,6 @@ func (t *TimestampConverter) BindStateToPreferencesAndUI(app fyne.App) {
 			}
 		}
 	}))
-
-	t.Preset.Set(preset)
 
 	t.Timestamp.AddListener(binding.NewDataListener(func() {
 		t.SetStatus("Timestamp updated")
@@ -313,7 +327,6 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 }
 
 func (t *TimestampConverter) SetupAndRun() {
-	t.CreateBindings()
 	t.Timestamp.Set(time.Now())
 
 	status := widget.NewLabelWithData(t.Status)
@@ -371,7 +384,7 @@ func (t *TimestampConverter) SetupAndRun() {
 		}
 	}()
 
-	t.BindStateToPreferencesAndUI(t.app)
+	t.BindStateToUI(t.app)
 	t.window.SetMainMenu(t.MakeMenu(t.app))
 	t.window.SetContent(mainContainer)
 	t.window.Resize(fyne.NewSize(600, 400))
