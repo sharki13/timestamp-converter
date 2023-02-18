@@ -234,6 +234,7 @@ func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
 
 		_ = t.userPresets.Set(userPresets)
 		t.window.SetMainMenu(t.MakeMenu(t.app))
+		t.preset.Set(preset.Id)
 		w.Close()
 	})
 

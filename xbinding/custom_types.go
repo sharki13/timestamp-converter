@@ -39,10 +39,6 @@ type Presets struct {
 	value binding.UntypedList
 }
 
-func (*Presets) Interface() interface{} {
-	return timezone.Presets{}
-}
-
 func NewPresets() Presets {
 	return Presets{
 		value: binding.NewUntypedList(),
@@ -61,11 +57,11 @@ func (e *Presets) Set(value []timezone.Preset) error {
 func (e *Presets) Get() ([]timezone.Preset, error) {
 	value, err := e.value.Get()
 	if err != nil {
-		return timezone.Presets{}, err
+		return []timezone.Preset{}, err
 	}
 
 	if value == nil {
-		return timezone.Presets{}, nil
+		return []timezone.Preset{}, nil
 	}
 
 	toReturn := make([]timezone.Preset, len(value))

@@ -67,7 +67,7 @@ func isPresetEqual(a, b timezone.Preset) bool {
 	return true
 }
 
-func isPresetsEqual(a, b timezone.Presets) bool {
+func isPresetsEqual(a, b []timezone.Preset) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -83,7 +83,7 @@ func isPresetsEqual(a, b timezone.Presets) bool {
 
 func TestTimePreset(t *testing.T) {
 	type args struct {
-		value timezone.Presets
+		value []timezone.Preset
 	}
 	tests := []struct {
 		name    string
@@ -95,11 +95,11 @@ func TestTimePreset(t *testing.T) {
 			name: "TestTime_Set",
 			tr:   NewPresets(),
 			args: args{
-				value: timezone.Presets{
-					timezone.Preset{
-						Id: 0,
-						Label: "UTC",
-						Timezones: []int{1,2,3},
+				value: []timezone.Preset{
+					{
+						Id:        0,
+						Label:     "UTC",
+						Timezones: []int{1, 2, 3},
 					},
 				},
 			},

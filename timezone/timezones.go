@@ -44,10 +44,8 @@ type Preset struct {
 	Timezones []int  `json:"timezones"`
 }
 
-type Presets []Preset
-
-func (tp Presets) String() (string, error) {
-	ret, err := json.Marshal(tp)
+func SerializePresets(e []Preset) (string, error) {
+	ret, err := json.Marshal(e)
 	if err != nil {
 		return "", err
 	}
@@ -55,8 +53,8 @@ func (tp Presets) String() (string, error) {
 	return string(ret), nil
 }
 
-func PresetsFromString(s string) (Presets, error) {
-	var ret Presets
+func DeserializePresets(s string) ([]Preset, error) {
+	var ret []Preset
 	err := json.Unmarshal([]byte(s), &ret)
 	if err != nil {
 		return nil, err

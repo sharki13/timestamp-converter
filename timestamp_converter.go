@@ -72,6 +72,16 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = t.preferences.AddPresets(PresetsPreference{
+		Key:      "userPresets",
+		Value:    t.userPresets,
+		Fallback: []timezone.Preset{},
+	})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Should be called after UI setup
