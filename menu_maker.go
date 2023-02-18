@@ -29,10 +29,8 @@ func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 		menus = append(menus, fileMenu)
 	}
 
-	t.presetMenu = t.MakePresetMenu()
-
 	menus = append(menus,
-		t.presetMenu,
+		t.MakePresetMenu(),
 		t.MakeFormatMenu(app),
 		t.MakeSettingsMenu(app),
 		t.MakeInfoMenu(app),

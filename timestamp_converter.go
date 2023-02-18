@@ -25,7 +25,6 @@ type TimestampConverter struct {
 	userPresets           xbinding.Presets
 	window                fyne.Window
 	app                   fyne.App
-	presetMenu            *fyne.Menu
 	preferences           *PreferencesSynchronizer
 }
 
@@ -331,12 +330,7 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 		}),
 	}
 
-	debugBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
-		t.presetMenu = t.MakeFormatMenu(t.app)
-		t.window.MainMenu().Refresh()
-	})
-
-	return container.NewBorder(debugBtn, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
+	return container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
 }
 
 func (t *TimestampConverter) SetupAndRun() {
