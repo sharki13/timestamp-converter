@@ -14,16 +14,16 @@ import (
 )
 
 type TimestampConverter struct {
-	TimezonesVisbleState map[int]binding.Bool
-	Timestamp            BoundTime
-	Format               binding.String
-	Status               binding.String
-	WatchClipboard       bool
-	Preset               binding.Int
-	window               fyne.Window
-	app                  fyne.App
-	presetMenu           *fyne.Menu
-	preferences          *PreferencesSynchronizer
+	timezonesVisibleState map[int]binding.Bool
+	timestamp             BoundTime
+	format                binding.String
+	status                binding.String
+	watchClipboard        bool
+	preset                binding.Int
+	window                fyne.Window
+	app                   fyne.App
+	presetMenu            *fyne.Menu
+	preferences           *PreferencesSynchronizer
 }
 
 func NewTimestampConverter(app fyne.App) *TimestampConverter {
@@ -32,22 +32,17 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 		window: app.NewWindow("Timestamp converter"),
 	}
 
-	ret.initialize()
+	ret.timezonesVisibleState = make(map[int]binding.Bool, 0)
+	ret.timestamp = NewBoundTime()
+	ret.timestamp.Set(time.Now())
+	ret.format = binding.NewString()
+	ret.status = binding.NewString()
+	ret.preset = binding.NewInt()
+	ret.preferences = NewPreferencesSynchronizer(app)
+
+	ret.SetupAndLoadPreferences()
 
 	return &ret
-}
-
-// Initialize bindings, have to be called at the very beginning,
-// otherwise code might try to reach bindings that are not yet initialized
-func (t *TimestampConverter) initialize() {
-	t.TimezonesVisbleState = make(map[int]binding.Bool)
-	t.Timestamp = NewBoundTime()
-	t.Format = binding.NewString()
-	t.Status = binding.NewString()
-	t.Preset = binding.NewInt()
-	t.preferences = NewPreferencesSynchronizer(t.app)
-
-	t.SetupAndLoadPreferences()
 }
 
 // Sets up the preferences and loads them
@@ -56,7 +51,7 @@ func (t *TimestampConverter) initialize() {
 func (t *TimestampConverter) SetupAndLoadPreferences() {
 	err := t.preferences.AddString(StringPreference{
 		Key:      "format",
-		Value:    t.Format,
+		Value:    t.format,
 		Fallback: time.RFC3339,
 	})
 
@@ -66,7 +61,7 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 
 	err = t.preferences.AddInt(IntPreference{
 		Key:      "preset",
-		Value:    t.Preset,
+		Value:    t.preset,
 		Fallback: 1,
 	})
 
@@ -78,13 +73,13 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 // Should be called after UI setup
 func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 
-	t.Preset.AddListener(binding.NewDataListener(func() {
-		p, err := t.Preset.Get()
+	t.preset.AddListener(binding.NewDataListener(func() {
+		p, err := t.preset.Get()
 		if err != nil {
 			panic(err)
 		}
 
-		for _, e := range t.TimezonesVisbleState {
+		for _, e := range t.timezonesVisibleState {
 			e.Set(false)
 		}
 
@@ -92,18 +87,18 @@ func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 			if presetDef.Id == p {
 				for _, id := range presetDef.Timezones {
 					// check if id key exists
-					if _, ok := t.TimezonesVisbleState[id]; !ok {
+					if _, ok := t.timezonesVisibleState[id]; !ok {
 						continue
 					}
 
-					t.TimezonesVisbleState[id].Set(true)
+					t.timezonesVisibleState[id].Set(true)
 				}
 				t.SetStatus(fmt.Sprintf("Preset %s", presetDef.Label))
 			}
 		}
 	}))
 
-	t.Timestamp.AddListener(binding.NewDataListener(func() {
+	t.timestamp.AddListener(binding.NewDataListener(func() {
 		t.SetStatus("Timestamp updated")
 	}))
 }
@@ -116,17 +111,17 @@ type TimestampItemsSet struct {
 
 func (t *TimestampConverter) SetStatus(status string) {
 	now := time.Now()
-	t.Status.Set(fmt.Sprintf("[%s]: %s", now.Format("15:04:05"), status))
+	t.status.Set(fmt.Sprintf("[%s]: %s", now.Format("15:04:05"), status))
 }
 
 func (t *TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition TimezoneDefinition) {
 	onFormatOrTimestampChange := binding.NewDataListener(func() {
-		timestamp, err := t.Timestamp.Get()
+		timestamp, err := t.timestamp.Get()
 		if err != nil {
 			panic(err)
 		}
 
-		format, err := t.Format.Get()
+		format, err := t.format.Get()
 		if err != nil {
 			panic(err)
 		}
@@ -138,8 +133,8 @@ func (t *TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.
 		}
 	})
 
-	t.Timestamp.AddListener(onFormatOrTimestampChange)
-	t.Format.AddListener(onFormatOrTimestampChange)
+	t.timestamp.AddListener(onFormatOrTimestampChange)
+	t.format.AddListener(onFormatOrTimestampChange)
 }
 
 func (t *TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window fyne.Window) *widget.Button {
@@ -166,13 +161,13 @@ func (t *TimestampConverter) NewTimestampSetItems(timezone TimezoneDefinition, w
 			return
 		}
 
-		currentTimestamp, err := t.Timestamp.Get()
+		currentTimestamp, err := t.timestamp.Get()
 		if err != nil {
 			panic(err)
 		}
 
 		if currentTimestamp != timestamp {
-			t.Timestamp.Set(timestamp)
+			t.timestamp.Set(timestamp)
 		}
 	}
 
@@ -227,7 +222,7 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 
 		visibleIds := []int{}
 
-		for k, e := range t.TimezonesVisbleState {
+		for k, e := range t.timezonesVisibleState {
 			visible, _ := e.Get()
 			if visible {
 				visibleIds = append(visibleIds, k)
@@ -256,7 +251,7 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 		if len(options) != 0 {
 			for _, timeZoneDefinition := range Timezones {
 				if timeZoneDefinition.Label == options[0] {
-					t.TimezonesVisbleState[timeZoneDefinition.Id].Set(true)
+					t.timezonesVisibleState[timeZoneDefinition.Id].Set(true)
 					break
 				}
 			}
@@ -283,7 +278,7 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 
 func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 	nowBtn := widget.NewButtonWithIcon("Now", theme.ViewRefreshIcon(), func() {
-		t.Timestamp.Set(time.Now())
+		t.timestamp.Set(time.Now())
 		t.SetStatus("Updated to now")
 	})
 	nowBtn.Importance = widget.HighImportance
@@ -293,7 +288,7 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 	}
 
 	rightSideToolbarItems := []fyne.CanvasObject{
-		widget.NewCheck("Watch clipboard", func(checked bool) { t.WatchClipboard = checked }),
+		widget.NewCheck("Watch clipboard", func(checked bool) { t.watchClipboard = checked }),
 		widget.NewButtonWithIcon("", theme.ContentPasteIcon(), func() {
 			clip := window.Clipboard()
 
@@ -313,7 +308,7 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 				return
 			}
 
-			t.Timestamp.Set(timestamp)
+			t.timestamp.Set(timestamp)
 			t.SetStatus("Updated from clipboard")
 		}),
 	}
@@ -327,9 +322,8 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 }
 
 func (t *TimestampConverter) SetupAndRun() {
-	t.Timestamp.Set(time.Now())
 
-	status := widget.NewLabelWithData(t.Status)
+	status := widget.NewLabelWithData(t.status)
 	t.SetStatus("Ready")
 
 	leftSide := container.NewVBox()
@@ -343,7 +337,7 @@ func (t *TimestampConverter) SetupAndRun() {
 		items.Visible.Set(true)
 
 		// add to visible changer
-		t.TimezonesVisbleState[timezone.Id] = items.Visible
+		t.timezonesVisibleState[timezone.Id] = items.Visible
 	}
 
 	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
@@ -352,7 +346,7 @@ func (t *TimestampConverter) SetupAndRun() {
 	go func() {
 		for {
 			time.Sleep(time.Second)
-			if t.WatchClipboard {
+			if t.watchClipboard {
 				clip := t.window.Clipboard()
 
 				if clip == nil {
@@ -369,7 +363,7 @@ func (t *TimestampConverter) SetupAndRun() {
 					continue
 				}
 
-				currentTimestamp, err := t.Timestamp.Get()
+				currentTimestamp, err := t.timestamp.Get()
 				if err != nil {
 					panic(err)
 				}
@@ -378,7 +372,7 @@ func (t *TimestampConverter) SetupAndRun() {
 					continue
 				}
 
-				t.Timestamp.Set(timestamp)
+				t.timestamp.Set(timestamp)
 				t.SetStatus("Updated from clipboard")
 			}
 		}

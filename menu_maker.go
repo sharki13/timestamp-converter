@@ -109,11 +109,11 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 	for _, format := range SupportedFormats {
 		format := format
 		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
-			t.Format.Set(format.Format)
+			t.format.Set(format.Format)
 		})
 
-		t.Format.AddListener(binding.NewDataListener(func() {
-			currentFormat, err := t.Format.Get()
+		t.format.AddListener(binding.NewDataListener(func() {
+			currentFormat, err := t.format.Get()
 			if err != nil {
 				panic(err)
 			}
@@ -138,11 +138,11 @@ func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
 		preset := preset
 
 		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
-			t.Preset.Set(preset.Id)
+			t.preset.Set(preset.Id)
 		})
 
-		t.Preset.AddListener(binding.NewDataListener(func() {
-			currentPreset, err := t.Preset.Get()
+		t.preset.AddListener(binding.NewDataListener(func() {
+			currentPreset, err := t.preset.Get()
 			if err != nil {
 				panic(err)
 			}
