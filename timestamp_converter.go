@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"com.sharki13/timestamp.converter/timezone"
 	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -84,7 +85,7 @@ func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 			e.Set(false)
 		}
 
-		for _, presetDef := range TimezonePresets {
+		for _, presetDef := range timezone.TimezonePresets {
 			if presetDef.Id == p {
 				for _, id := range presetDef.Timezones {
 					// check if id key exists
@@ -115,7 +116,7 @@ func (t *TimestampConverter) SetStatus(status string) {
 	t.status.Set(fmt.Sprintf("[%s]: %s", now.Format("15:04:05"), status))
 }
 
-func (t *TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition TimezoneDefinition) {
+func (t *TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition timezone.TimezoneDefinition) {
 	onFormatOrTimestampChange := binding.NewDataListener(func() {
 		timestamp, err := t.timestamp.Get()
 		if err != nil {
@@ -151,9 +152,9 @@ func (t *TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window 
 	})
 }
 
-func (t *TimestampConverter) NewTimestampSetItems(timezone TimezoneDefinition, window fyne.Window) TimestampItemsSet {
+func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition, window fyne.Window) TimestampItemsSet {
 	entry := widget.NewEntry()
-	t.AttachEntryToFormatOrTimestampChange(entry, timezone)
+	t.AttachEntryToFormatOrTimestampChange(entry, tz)
 
 	entry.OnChanged = func(text string) {
 		timestamp, err := PraseStringToTime(text)
@@ -187,11 +188,11 @@ func (t *TimestampConverter) NewTimestampSetItems(timezone TimezoneDefinition, w
 		visibleBind.Set(false)
 	})
 
-	if timezone.Type == LocalTimezoneType {
+	if tz.Type == timezone.LocalTimezoneType {
 		deleteBtn.Disable()
 	}
 
-	label := widget.NewLabel(timezone.Label)
+	label := widget.NewLabel(tz.Label)
 	deleteBtnLabelContainer := container.NewHBox(deleteBtn, label)
 
 	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, t.MakeCopyButtonForEntry(entry, window), entry)
@@ -230,7 +231,7 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 			}
 		}
 
-		for _, timeZoneDefinition := range Timezones {
+		for _, timeZoneDefinition := range timezone.Timezones {
 			if strings.Contains(strings.ToLower(timeZoneDefinition.Label), strings.ToLower(text)) && !contains(visibleIds, timeZoneDefinition.Id) {
 				options = append(options, timeZoneDefinition.Label)
 			}
@@ -246,11 +247,11 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 		entry.ShowCompletion()
 	}
 
-	entry.OnSubmitted = func(timezone string) {
-		options := getOptions(timezone)
+	entry.OnSubmitted = func(tz string) {
+		options := getOptions(tz)
 
 		if len(options) != 0 {
-			for _, timeZoneDefinition := range Timezones {
+			for _, timeZoneDefinition := range timezone.Timezones {
 				if timeZoneDefinition.Label == options[0] {
 					t.timezonesVisibleState[timeZoneDefinition.Id].Set(true)
 					break
@@ -330,15 +331,15 @@ func (t *TimestampConverter) SetupAndRun() {
 	leftSide := container.NewVBox()
 	middle := container.NewVBox()
 
-	for _, timezone := range Timezones {
-		items := t.NewTimestampSetItems(timezone, t.window)
+	for _, tz := range timezone.Timezones {
+		items := t.NewTimestampSetItems(tz, t.window)
 
 		leftSide.Add(items.DeleteBtnLabelContainer)
 		middle.Add(items.EntryCopyBtnContainer)
 		items.Visible.Set(true)
 
 		// add to visible changer
-		t.timezonesVisibleState[timezone.Id] = items.Visible
+		t.timezonesVisibleState[tz.Id] = items.Visible
 	}
 
 	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))

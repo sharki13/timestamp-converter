@@ -1,6 +1,7 @@
-package main
+package timezone
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -20,11 +21,11 @@ type TimezoneDefinition struct {
 	Type             TimezoneType
 }
 
-func (tt TimezoneDefinition) StringTime(t time.Time, format string) string {
-	if tt.Type == UnixTimezoneType {
+func (td TimezoneDefinition) StringTime(t time.Time, format string) string {
+	if td.Type == UnixTimezoneType {
 		return strconv.FormatInt(t.Unix(), 10)
 	} else {
-		return t.In(tt.Location()).Format(format)
+		return t.In(td.Location()).Format(format)
 	}
 }
 
@@ -37,10 +38,31 @@ func (td TimezoneDefinition) Location() *time.Location {
 	return loc
 }
 
-type TimezonePreset struct {
-	Id        int    `json:"id"`
+type Preset struct {
+	Id        int    `json:"-"`
 	Label     string `json:"label"`
 	Timezones []int  `json:"timezones"`
+}
+
+type Presets []Preset
+
+func (tp Presets) String() (string, error) {
+	ret, err := json.Marshal(tp)
+	if err != nil {
+		return "", err
+	}
+
+	return string(ret), nil
+}
+
+func PresetsFromString(s string) (Presets, error) {
+	var ret Presets
+	err := json.Unmarshal([]byte(s), &ret)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }
 
 // Id 0 is reserved for the None preset
@@ -75,7 +97,7 @@ const (
 	UTC
 )
 
-var TimezonePresets = []TimezonePreset{
+var TimezonePresets = []Preset{
 	{
 		Id:        DeveloperPreset,
 		Label:     "Developer",

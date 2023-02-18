@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"runtime"
 
+	"com.sharki13/timestamp.converter/timezone"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
@@ -134,7 +135,7 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
 	items := make([]*fyne.MenuItem, 0)
 
-	for _, preset := range TimezonePresets {
+	for _, preset := range timezone.TimezonePresets {
 		preset := preset
 
 		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
