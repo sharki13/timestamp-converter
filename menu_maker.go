@@ -132,34 +132,49 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 	return formatMenu
 }
 
+func makePresetMenuItem(label string, id int, currentPresetBound binding.Int) *fyne.MenuItem {
+	presetMenuItem := fyne.NewMenuItem(label, func() {
+		currentPresetBound.Set(id)
+	})
+
+	currentPresetBound.AddListener(binding.NewDataListener(func() {
+		currentPreset, err := currentPresetBound.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		if currentPreset == id {
+			presetMenuItem.Checked = true
+		} else {
+			presetMenuItem.Checked = false
+		}
+	}))
+
+	return presetMenuItem
+}
+
 func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
 	items := make([]*fyne.MenuItem, 0)
 
-	for _, preset := range timezone.TimezonePresets {
+	for _, preset := range timezone.DefaultPresets {
 		preset := preset
-
-		presetsMenuItem := fyne.NewMenuItem(preset.Label, func() {
-			t.preset.Set(preset.Id)
-		})
-
-		t.preset.AddListener(binding.NewDataListener(func() {
-			currentPreset, err := t.preset.Get()
-			if err != nil {
-				panic(err)
-			}
-
-			if currentPreset == preset.Id {
-				presetsMenuItem.Checked = true
-			} else {
-				presetsMenuItem.Checked = false
-			}
-		}))
-
-		items = append(items, presetsMenuItem)
+		items = append(items, makePresetMenuItem(preset.Label, preset.Id, t.preset))
 	}
 
-	noneItem := fyne.NewMenuItem("(None)", func() {})
-	noneItem.Disabled = true
+	items = append(items, fyne.NewMenuItemSeparator())
+
+	userPresets, _ := t.userPresets.Get()
+
+	if len(userPresets) == 0 {
+		noneItem := fyne.NewMenuItem("(None)", func() {})
+		noneItem.Disabled = true
+		items = append(items, noneItem)
+	} else {
+		for _, preset := range userPresets {
+			preset := preset
+			items = append(items, makePresetMenuItem(preset.Label, preset.Id, t.preset))
+		}
+	}
 
 	addPereset := fyne.NewMenuItem("Add current as preset", t.MakeAndShowAddPresetWindow)
 
@@ -169,7 +184,7 @@ func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
 
 	removePreset.Disabled = true
 
-	items = append(items, fyne.NewMenuItemSeparator(), noneItem, addPereset, removePreset)
+	items = append(items, addPereset, removePreset)
 
 	return fyne.NewMenu("Presets", items...)
 }
@@ -198,9 +213,30 @@ func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
 	})
 
 	okBtn := widget.NewButton("OK", func() {
-		fmt.Print(presetName.Text)
+		userPresets, _ := t.userPresets.Get()
+
+		activeTimezones := []int{}
+
+		for k, tz := range t.timezonesVisibleState {
+			visible, _ := tz.Get()
+			if visible {
+				activeTimezones = append(activeTimezones, k)
+			}
+		}
+
+		preset := timezone.Preset{
+			Id:        timezone.LastInternalId + len(userPresets) + 1,
+			Label:     presetName.Text,
+			Timezones: activeTimezones,
+		}
+
+		userPresets = append(userPresets, preset)
+
+		_ = t.userPresets.Set(userPresets)
+		t.window.SetMainMenu(t.MakeMenu(t.app))
 		w.Close()
 	})
+
 	okBtn.Importance = widget.HighImportance
 	okBtn.Icon = theme.ConfirmIcon()
 

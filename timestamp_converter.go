@@ -22,6 +22,7 @@ type TimestampConverter struct {
 	status                binding.String
 	watchClipboard        bool
 	preset                binding.Int
+	userPresets           xbinding.Presets
 	window                fyne.Window
 	app                   fyne.App
 	presetMenu            *fyne.Menu
@@ -40,6 +41,7 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	ret.format = binding.NewString()
 	ret.status = binding.NewString()
 	ret.preset = binding.NewInt()
+	ret.userPresets = xbinding.NewPresets()
 	ret.preferences = NewPreferencesSynchronizer(app)
 
 	ret.SetupAndLoadPreferences()
@@ -85,7 +87,11 @@ func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 			e.Set(false)
 		}
 
-		for _, presetDef := range timezone.TimezonePresets {
+		userPresets, _ := t.userPresets.Get()
+
+		presets := append(timezone.DefaultPresets, userPresets...)
+
+		for _, presetDef := range presets {
 			if presetDef.Id == p {
 				for _, id := range presetDef.Timezones {
 					// check if id key exists

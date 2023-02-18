@@ -97,7 +97,7 @@ const (
 	UTC
 )
 
-var TimezonePresets = []Preset{
+var DefaultPresets = []Preset{
 	{
 		Id:        DeveloperPreset,
 		Label:     "Developer",

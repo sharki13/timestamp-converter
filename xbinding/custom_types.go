@@ -35,28 +35,45 @@ func (t *Time) AddListener(listener binding.DataListener) {
 	t.value.AddListener(listener)
 }
 
-
 type Presets struct {
-	value binding.Untyped
+	value binding.UntypedList
+}
+
+func (*Presets) Interface() interface{} {
+	return timezone.Presets{}
 }
 
 func NewPresets() Presets {
 	return Presets{
-		value: binding.NewUntyped(),
+		value: binding.NewUntypedList(),
 	}
 }
 
-func (e *Presets) Set(value timezone.Presets) error {
-	return e.value.Set(value)
+func (e *Presets) Set(value []timezone.Preset) error {
+	toSet := make([]interface{}, len(value))
+	for i, v := range value {
+		toSet[i] = v
+	}
+
+	return e.value.Set(toSet)
 }
 
-func (e *Presets) Get() (timezone.Presets, error) {
+func (e *Presets) Get() ([]timezone.Preset, error) {
 	value, err := e.value.Get()
 	if err != nil {
 		return timezone.Presets{}, err
 	}
 
-	return value.(timezone.Presets), nil
+	if value == nil {
+		return timezone.Presets{}, nil
+	}
+
+	toReturn := make([]timezone.Preset, len(value))
+	for i, v := range value {
+		toReturn[i] = v.(timezone.Preset)
+	}
+
+	return toReturn, nil
 }
 
 func (e *Presets) AddListener(listener binding.DataListener) {
