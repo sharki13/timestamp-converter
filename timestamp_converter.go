@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
@@ -15,7 +16,7 @@ import (
 
 type TimestampConverter struct {
 	timezonesVisibleState map[int]binding.Bool
-	timestamp             BoundTime
+	timestamp             xbinding.Time
 	format                binding.String
 	status                binding.String
 	watchClipboard        bool
@@ -33,7 +34,7 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	}
 
 	ret.timezonesVisibleState = make(map[int]binding.Bool, 0)
-	ret.timestamp = NewBoundTime()
+	ret.timestamp = xbinding.NewTime()
 	ret.timestamp.Set(time.Now())
 	ret.format = binding.NewString()
 	ret.status = binding.NewString()
