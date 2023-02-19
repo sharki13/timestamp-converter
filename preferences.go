@@ -10,12 +10,20 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 )
 
+type Keyed interface {
+	GetKey() string
+}
+
 // Preference that is stored as a string
 // key: the key of the preference, has to be unique across all preferences
 type StringPreference struct {
 	Key      string
 	Value    binding.String
 	Fallback string
+}
+
+func (s StringPreference) GetKey() string {
+	return s.Key
 }
 
 // Preference that is stored as an int
@@ -26,6 +34,10 @@ type IntPreference struct {
 	Fallback int
 }
 
+func (i IntPreference) GetKey() string {
+	return i.Key
+}
+
 // Preference that is stored as a boolean
 // key: the key of the preference, has to be unique across all preferences
 type BoolPreference struct {
@@ -34,12 +46,20 @@ type BoolPreference struct {
 	Fallback bool
 }
 
+func (b BoolPreference) GetKey() string {
+	return b.Key
+}
+
 // Preference that is stored as a list of presets
 // key: the key of the preference, has to be unique across all preferences
 type PresetsPreference struct {
 	Key      string
 	Value    xbinding.Presets
 	Fallback []timezone.Preset
+}
+
+func (p PresetsPreference) GetKey() string {
+	return p.Key
 }
 
 // PreferencesSynchronizer is used to sync preferences
@@ -177,23 +197,27 @@ func (p *PreferencesSynchronizer) AddPresets(e PresetsPreference) error {
 	return nil
 }
 
+func isKeyExistInCollection[T Keyed](key string, collection []T) bool {
+	for _, pref := range collection {
+		if pref.GetKey() == key {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (p *PreferencesSynchronizer) isKeyExisting(key string) bool {
-	for _, pref := range p.stringPreferences {
-		if pref.Key == key {
-			return true
-		}
+	if exist := isKeyExistInCollection(key, p.stringPreferences); exist {
+		return true
 	}
 
-	for _, pref := range p.intPreferences {
-		if pref.Key == key {
-			return true
-		}
+	if exist := isKeyExistInCollection(key, p.intPreferences); exist {
+		return true
 	}
 
-	for _, pref := range p.boolPreferences {
-		if pref.Key == key {
-			return true
-		}
+	if exist := isKeyExistInCollection(key, p.boolPreferences); exist {
+		return true
 	}
 
 	if p.userPresets.Key == key {
