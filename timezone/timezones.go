@@ -1,7 +1,6 @@
 package timezone
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -39,32 +38,9 @@ func (td TimezoneDefinition) Location() *time.Location {
 }
 
 type Preset struct {
-	Id        int    `json:"-"`
-	Label     string `json:"label"`
-	Timezones []int  `json:"timezones"`
-}
-
-func SerializePresets(e []Preset) (string, error) {
-	ret, err := json.Marshal(e)
-	if err != nil {
-		return "", err
-	}
-
-	return string(ret), nil
-}
-
-func DeserializePresets(s string) ([]Preset, error) {
-	var ret []Preset
-	err := json.Unmarshal([]byte(s), &ret)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range ret {
-		ret[i].Id = i + LastInternalId
-	}
-
-	return ret, nil
+	Id        int
+	Label     string
+	Timezones []int
 }
 
 // Id 0 is reserved for the None preset
