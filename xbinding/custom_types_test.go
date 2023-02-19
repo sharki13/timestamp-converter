@@ -4,8 +4,6 @@ import (
 	"reflect"
 	"testing"
 	"time"
-
-	"com.sharki13/timestamp.converter/timezone"
 )
 
 func TestTime(t *testing.T) {
@@ -46,36 +44,21 @@ func TestTime(t *testing.T) {
 	}
 }
 
-func isPresetsEqual(a, b []timezone.Preset) bool {
-	return reflect.DeepEqual(a, b)
-}
-
-func TestTimePreset(t *testing.T) {
+func TestIntArray(t *testing.T) {
 	type args struct {
-		value []timezone.Preset
+		value []int
 	}
 	tests := []struct {
 		name    string
-		tr      Presets
+		tr      IntArray
 		args    args
 		wantErr bool
 	}{
 		{
 			name: "TestTime_Set",
-			tr:   NewPresets(),
+			tr:   NewIntArray(),
 			args: args{
-				value: []timezone.Preset{
-					{
-						Id:        0,
-						Label:     "Home",
-						Timezones: []int{1, 2, 3},
-					},
-					{
-						Id:        1,
-						Label:     "Work",
-						Timezones: []int{1, 2, 3, 5},
-					},
-				},
+				value: []int{1, 2, 3},
 			},
 			wantErr: false,
 		},
@@ -92,7 +75,7 @@ func TestTimePreset(t *testing.T) {
 				return
 			}
 
-			if !isPresetsEqual(got, tt.args.value) {
+			if !reflect.DeepEqual(got, tt.args.value) {
 				t.Errorf("Time.Get() = %v, want %v", got, tt.args.value)
 			}
 		})

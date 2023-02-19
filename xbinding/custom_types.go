@@ -3,7 +3,6 @@ package xbinding
 import (
 	"time"
 
-	"com.sharki13/timestamp.converter/timezone"
 	"fyne.io/fyne/v2/data/binding"
 )
 
@@ -35,43 +34,36 @@ func (t *Time) AddListener(listener binding.DataListener) {
 	t.value.AddListener(listener)
 }
 
-type Presets struct {
+type IntArray struct {
 	value binding.UntypedList
 }
 
-func NewPresets() Presets {
-	return Presets{
+func NewIntArray() IntArray {
+	return IntArray{
 		value: binding.NewUntypedList(),
 	}
 }
 
-func (e *Presets) Set(value []timezone.Preset) error {
-	toSet := make([]interface{}, len(value))
+func (t *IntArray) Set(value []int) error {
+	interfaces := make([]interface{}, len(value))
 	for i, v := range value {
-		toSet[i] = v
+		interfaces[i] = v
 	}
 
-	return e.value.Set(toSet)
+	return t.value.Set(interfaces)
 }
 
-func (e *Presets) Get() ([]timezone.Preset, error) {
-	value, err := e.value.Get()
+func (t *IntArray) Get() ([]int, error) {
+	values, err := t.value.Get()
 	if err != nil {
-		return []timezone.Preset{}, err
+		return nil, err
 	}
 
-	if value == nil {
-		return []timezone.Preset{}, nil
+	// make from values a []int
+	ret := make([]int, len(values))
+	for i, v := range values {
+		ret[i] = v.(int)
 	}
 
-	toReturn := make([]timezone.Preset, len(value))
-	for i, v := range value {
-		toReturn[i] = v.(timezone.Preset)
-	}
-
-	return toReturn, nil
-}
-
-func (e *Presets) AddListener(listener binding.DataListener) {
-	e.value.AddListener(listener)
+	return ret, nil
 }
