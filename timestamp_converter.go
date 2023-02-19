@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	prefSync "com.sharki13/timestamp.converter/preferences"
 	"com.sharki13/timestamp.converter/timezone"
 	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
@@ -22,7 +23,7 @@ type TimestampConverter struct {
 	preset                binding.Int
 	window                fyne.Window
 	app                   fyne.App
-	preferences           *PreferencesSynchronizer
+	preferences           *prefSync.PreferencesSynchronizer
 }
 
 func NewTimestampConverter(app fyne.App) *TimestampConverter {
@@ -36,7 +37,7 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	ret.timestamp.Set(time.Now())
 	ret.format = binding.NewString()
 	ret.preset = binding.NewInt()
-	ret.preferences = NewPreferencesSynchronizer(app)
+	ret.preferences = prefSync.NewPreferencesSynchronizer(app)
 
 	ret.SetupAndLoadPreferences()
 
@@ -47,7 +48,7 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 // from the fyne preferences
 // Might panic if keys are not unique
 func (t *TimestampConverter) SetupAndLoadPreferences() {
-	err := t.preferences.AddString(StringPreference{
+	err := t.preferences.AddString(prefSync.StringPreference{
 		Key:      "format",
 		Value:    t.format,
 		Fallback: time.RFC3339,
@@ -57,7 +58,7 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 		panic(err)
 	}
 
-	err = t.preferences.AddInt(IntPreference{
+	err = t.preferences.AddInt(prefSync.IntPreference{
 		Key:      "preset",
 		Value:    t.preset,
 		Fallback: 1,
@@ -360,7 +361,7 @@ func (t *TimestampConverter) SetupAndRun() {
 	}()
 
 	t.BindStateToUI(t.app)
-	t.window.SetMainMenu(t.MakeMenu(t.app))
+	t.window.SetMainMenu(t.MakeMenu())
 	t.window.SetContent(mainContainer)
 	t.window.Resize(fyne.NewSize(600, 400))
 	t.window.ShowAndRun()

@@ -1,10 +1,7 @@
-package main
+package preferences
 
 import (
 	"fmt"
-
-	"com.sharki13/timestamp.converter/timezone"
-	"com.sharki13/timestamp.converter/xbinding"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
@@ -50,25 +47,12 @@ func (b BoolPreference) GetKey() string {
 	return b.Key
 }
 
-// Preference that is stored as a list of presets
-// key: the key of the preference, has to be unique across all preferences
-type PresetsPreference struct {
-	Key      string
-	Value    xbinding.Presets
-	Fallback []timezone.Preset
-}
-
-func (p PresetsPreference) GetKey() string {
-	return p.Key
-}
-
 // PreferencesSynchronizer is used to sync preferences
 // between bindings and the fyne preferences
 type PreferencesSynchronizer struct {
 	stringPreferences []StringPreference
 	intPreferences    []IntPreference
 	boolPreferences   []BoolPreference
-	userPresets       PresetsPreference
 	app               fyne.App
 }
 
@@ -159,44 +143,6 @@ func (p *PreferencesSynchronizer) AddBool(e BoolPreference) error {
 	return nil
 }
 
-// Adds a new presets preference to the synchronizer
-// and sets the value to the current value of the preference
-// or the fallback value if the preference is not set
-func (p *PreferencesSynchronizer) AddPresets(e PresetsPreference) error {
-	if p.isKeyExisting(e.Key) {
-		return fmt.Errorf("key %s is already in use", e.Key)
-	}
-
-	storageValue := p.app.Preferences().StringWithFallback(e.Key, "[]")
-
-	if storageValue == "[]" {
-		e.Value.Set(e.Fallback)
-	} else {
-		presets, err := timezone.DeserializePresets(storageValue)
-		if err != nil {
-			panic(err)
-		}
-
-		e.Value.Set(presets)
-	}
-
-	e.Value.AddListener(binding.NewDataListener(func() {
-		v, err := e.Value.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		serialized, err := timezone.SerializePresets(v)
-		if err != nil {
-			panic(err)
-		}
-
-		p.app.Preferences().SetString(e.Key, serialized)
-	}))
-
-	return nil
-}
-
 func isKeyExistInCollection[T Keyed](key string, collection []T) bool {
 	for _, pref := range collection {
 		if pref.GetKey() == key {
@@ -217,10 +163,6 @@ func (p *PreferencesSynchronizer) isKeyExisting(key string) bool {
 	}
 
 	if exist := isKeyExistInCollection(key, p.boolPreferences); exist {
-		return true
-	}
-
-	if p.userPresets.Key == key {
 		return true
 	}
 
