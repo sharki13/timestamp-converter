@@ -106,35 +106,38 @@ func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
 	currentFormat, _ := t.format.Get()
 
-	for _, format := range SupportedFormats {
-		format := format
-		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
-			t.format.Set(format.Format)
+	for k, label := range FormatLabelMap {
+		format := k
+		label := label
+		formatMenuItem := fyne.NewMenuItem(label, func() {
+			t.format.Set(format)
 		})
 
-		// formatMenuItem.Checked = true
-
-		if format.Format == currentFormat {
+		if format == currentFormat {
 			formatMenuItem.Checked = true
 		} else {
 			formatMenuItem.Checked = false
 		}
 
-		t.format.AddListener(binding.NewDataListener(func() {
-			currentFormat, err := t.format.Get()
-			if err != nil {
-				panic(err)
-			}
-
-			if currentFormat == format.Format {
-				formatMenuItem.Checked = true
-			} else {
-				formatMenuItem.Checked = false
-			}
-		}))
-
 		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
 	}
+
+	t.format.AddListener(binding.NewDataListener(func() {
+		currentFormat, err := t.format.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		label := FormatLabelMap[currentFormat]
+
+		for _, item := range formatMenu.Items {
+			if item.Label == label {
+				item.Checked = true
+			} else {
+				item.Checked = false
+			}
+		}
+	}))
 
 	return formatMenu
 }

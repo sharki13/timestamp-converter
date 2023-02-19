@@ -7,8 +7,8 @@ import (
 )
 
 func PraseStringToTime(s string) (time.Time, error) {
-	for _, format := range SupportedFormats {
-		t, err := time.Parse(format.Format, s)
+	for format, _ := range FormatLabelMap {
+		t, err := time.Parse(format, s)
 		if err == nil {
 			if t.Unix() >= 0 && t.Unix() <= 253374914595 {
 				return t, nil
