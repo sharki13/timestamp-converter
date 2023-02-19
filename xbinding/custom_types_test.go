@@ -1,6 +1,7 @@
 package xbinding
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -45,40 +46,8 @@ func TestTime(t *testing.T) {
 	}
 }
 
-func isPresetEqual(a, b timezone.Preset) bool {
-	if a.Id != b.Id {
-		return false
-	}
-
-	if a.Label != b.Label {
-		return false
-	}
-
-	if len(a.Timezones) != len(b.Timezones) {
-		return false
-	}
-
-	for i, v := range a.Timezones {
-		if v != b.Timezones[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
 func isPresetsEqual(a, b []timezone.Preset) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i, v := range a {
-		if !isPresetEqual(v, b[i]) {
-			return false
-		}
-	}
-
-	return true
+	return reflect.DeepEqual(a, b)
 }
 
 func TestTimePreset(t *testing.T) {
@@ -98,8 +67,13 @@ func TestTimePreset(t *testing.T) {
 				value: []timezone.Preset{
 					{
 						Id:        0,
-						Label:     "UTC",
+						Label:     "Home",
 						Timezones: []int{1, 2, 3},
+					},
+					{
+						Id:        1,
+						Label:     "Work",
+						Timezones: []int{1, 2, 3, 5},
 					},
 				},
 			},

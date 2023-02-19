@@ -104,12 +104,21 @@ func (t *TimestampConverter) MakeThemeMenu(app fyne.App) *fyne.MenuItem {
 func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
 
 	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
+	currentFormat, _ := t.format.Get()
 
 	for _, format := range SupportedFormats {
 		format := format
 		formatMenuItem := fyne.NewMenuItem(format.Label, func() {
 			t.format.Set(format.Format)
 		})
+
+		// formatMenuItem.Checked = true
+
+		if format.Format == currentFormat {
+			formatMenuItem.Checked = true
+		} else {
+			formatMenuItem.Checked = false
+		}
 
 		t.format.AddListener(binding.NewDataListener(func() {
 			currentFormat, err := t.format.Get()
@@ -147,6 +156,8 @@ func makePresetMenuItem(label string, id int, currentPresetBound binding.Int) *f
 			presetMenuItem.Checked = false
 		}
 	}))
+
+	presetMenuItem.Checked = true
 
 	return presetMenuItem
 }
@@ -223,7 +234,7 @@ func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
 		}
 
 		preset := timezone.Preset{
-			Id:        timezone.LastInternalId + len(userPresets) + 1,
+			Id:        len(timezone.DefaultPresets) + len(userPresets) + 1,
 			Label:     presetName.Text,
 			Timezones: activeTimezones,
 		}
@@ -233,6 +244,10 @@ func (t *TimestampConverter) MakeAndShowAddPresetWindow() {
 		_ = t.userPresets.Set(userPresets)
 		t.window.SetMainMenu(t.MakeMenu(t.app))
 		t.preset.Set(preset.Id)
+
+		currentFormat, _ := t.format.Get()
+		t.format.Set(currentFormat)
+
 		w.Close()
 	})
 

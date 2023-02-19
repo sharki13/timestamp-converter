@@ -60,6 +60,10 @@ func DeserializePresets(s string) ([]Preset, error) {
 		return nil, err
 	}
 
+	for i := range ret {
+		ret[i].Id = i + LastInternalId
+	}
+
 	return ret, nil
 }
 
