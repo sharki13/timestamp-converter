@@ -15,6 +15,79 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+type MenuMaker struct {
+	app                fyne.App
+	window             fyne.Window
+	timestampConverter *TimestampConverter
+	fileMenu           *fyne.Menu
+	formatMenu         *fyne.Menu
+}
+
+func NewMenuMaker(app fyne.App, window fyne.Window, timestampConverter *TimestampConverter) *MenuMaker {
+	return &MenuMaker{
+		app:                app,
+		window:             window,
+		timestampConverter: timestampConverter,
+	}
+}
+
+// MakeFileMenu creates a file menu for the application
+// if it has not already been created before
+// otherwise it returns the existing istance of the file menu since
+// content of the menu are not dynamic
+// to prevent making new allocations every time the menu is recreated
+func (mm *MenuMaker) MakeFileMenu() *fyne.Menu {
+	if mm.fileMenu == nil {
+		mm.fileMenu = fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
+			mm.timestampConverter.app.Quit()
+		}))
+	}
+
+	return mm.fileMenu
+}
+
+func (mm *MenuMaker) MakeFormatMenu() *fyne.Menu {
+	if mm.formatMenu == nil {
+		mm.formatMenu = fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
+		currentFormat, _ := mm.timestampConverter.format.Get()
+
+		for k, label := range FormatLabelMap {
+			format := k
+			label := label
+			formatMenuItem := fyne.NewMenuItem(label, func() {
+				mm.timestampConverter.format.Set(format)
+			})
+
+			if format == currentFormat {
+				formatMenuItem.Checked = true
+			} else {
+				formatMenuItem.Checked = false
+			}
+
+			mm.formatMenu.Items = append(mm.formatMenu.Items, formatMenuItem)
+		}
+
+		mm.timestampConverter.format.AddListener(binding.NewDataListener(func() {
+			currentFormat, err := mm.timestampConverter.format.Get()
+			if err != nil {
+				panic(err)
+			}
+
+			label := FormatLabelMap[currentFormat]
+
+			for _, item := range mm.formatMenu.Items {
+				if item.Label == label {
+					item.Checked = true
+				} else {
+					item.Checked = false
+				}
+			}
+		}))
+	}
+
+	return mm.formatMenu
+}
+
 func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 
 	menus := make([]*fyne.Menu, 0)
@@ -22,16 +95,12 @@ func (t *TimestampConverter) MakeMenu(app fyne.App) *fyne.MainMenu {
 	// Mac OS has a built in quit menu,
 	// on other platforms Fyne will add Quit to first menu if it is not defined
 	if runtime.GOOS != "darwin" {
-		fileMenu := fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
-			app.Quit()
-		}))
-
-		menus = append(menus, fileMenu)
+		menus = append(menus, t.menuMaker.MakeFileMenu())
 	}
 
 	menus = append(menus,
 		t.MakePresetMenu(),
-		t.MakeFormatMenu(app),
+		t.menuMaker.MakeFormatMenu(),
 		t.MakeSettingsMenu(app),
 		t.MakeInfoMenu(app),
 	)
@@ -99,47 +168,6 @@ func (t *TimestampConverter) MakeThemeMenu(app fyne.App) *fyne.MenuItem {
 	themeSubMenu.ChildMenu = fyne.NewMenu("", system, fyne.NewMenuItemSeparator(), light, dark)
 
 	return themeSubMenu
-}
-
-func (t *TimestampConverter) MakeFormatMenu(app fyne.App) *fyne.Menu {
-
-	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
-	currentFormat, _ := t.format.Get()
-
-	for k, label := range FormatLabelMap {
-		format := k
-		label := label
-		formatMenuItem := fyne.NewMenuItem(label, func() {
-			t.format.Set(format)
-		})
-
-		if format == currentFormat {
-			formatMenuItem.Checked = true
-		} else {
-			formatMenuItem.Checked = false
-		}
-
-		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
-	}
-
-	t.format.AddListener(binding.NewDataListener(func() {
-		currentFormat, err := t.format.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		label := FormatLabelMap[currentFormat]
-
-		for _, item := range formatMenu.Items {
-			if item.Label == label {
-				item.Checked = true
-			} else {
-				item.Checked = false
-			}
-		}
-	}))
-
-	return formatMenu
 }
 
 func makePresetMenuItem(label string, id int, currentPresetBound binding.Int) *fyne.MenuItem {
