@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -19,10 +18,8 @@ type TimestampConverter struct {
 	timezonesVisibleState map[int]binding.Bool
 	timestamp             xbinding.Time
 	format                binding.String
-	status                binding.String
 	watchClipboard        bool
 	preset                binding.Int
-	userPresets           xbinding.Presets
 	window                fyne.Window
 	app                   fyne.App
 	preferences           *PreferencesSynchronizer
@@ -38,9 +35,7 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	ret.timestamp = xbinding.NewTime()
 	ret.timestamp.Set(time.Now())
 	ret.format = binding.NewString()
-	ret.status = binding.NewString()
 	ret.preset = binding.NewInt()
-	ret.userPresets = xbinding.NewPresets()
 	ret.preferences = NewPreferencesSynchronizer(app)
 
 	ret.SetupAndLoadPreferences()
@@ -72,21 +67,13 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 		panic(err)
 	}
 
-	err = t.preferences.AddPresets(PresetsPreference{
-		Key:      "userPresets",
-		Value:    t.userPresets,
-		Fallback: []timezone.Preset{},
-	})
-
 	if err != nil {
 		panic(err)
 	}
 
 	savedPreset, _ := t.preset.Get()
 
-	userPresets, _ := t.userPresets.Get()
-
-	if savedPreset > len(append(timezone.DefaultPresets, userPresets...)) {
+	if savedPreset > len(timezone.DefaultPresets) {
 		t.preset.Set(1)
 	}
 }
@@ -104,11 +91,7 @@ func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 			e.Set(false)
 		}
 
-		userPresets, _ := t.userPresets.Get()
-
-		presets := append(timezone.DefaultPresets, userPresets...)
-
-		for _, presetDef := range presets {
+		for _, presetDef := range timezone.DefaultPresets {
 			if presetDef.Id == p {
 				for _, id := range presetDef.Timezones {
 					// check if id key exists
@@ -118,13 +101,8 @@ func (t *TimestampConverter) BindStateToUI(app fyne.App) {
 
 					t.timezonesVisibleState[id].Set(true)
 				}
-				t.SetStatus(fmt.Sprintf("Preset %s", presetDef.Label))
 			}
 		}
-	}))
-
-	t.timestamp.AddListener(binding.NewDataListener(func() {
-		t.SetStatus("Timestamp updated")
 	}))
 }
 
@@ -132,11 +110,6 @@ type TimestampItemsSet struct {
 	DeleteBtnLabelContainer *fyne.Container
 	EntryCopyBtnContainer   *fyne.Container
 	Visible                 binding.Bool
-}
-
-func (t *TimestampConverter) SetStatus(status string) {
-	now := time.Now()
-	t.status.Set(fmt.Sprintf("[%s]: %s", now.Format("15:04:05"), status))
 }
 
 func (t *TimestampConverter) AttachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition timezone.TimezoneDefinition) {
@@ -171,7 +144,6 @@ func (t *TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window 
 		}
 
 		clip.SetContent(entry.Text)
-		t.SetStatus("Copied to clipboard")
 	})
 }
 
@@ -182,7 +154,6 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 	entry.OnChanged = func(text string) {
 		timestamp, err := PraseStringToTime(text)
 		if err != nil {
-			t.SetStatus("Invalid timestamp")
 			return
 		}
 
@@ -281,7 +252,6 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 				}
 			}
 
-			t.SetStatus(fmt.Sprintf("Added %s", options[0]))
 			entry.SetText("")
 			entry.HideCompletion()
 		}
@@ -304,7 +274,6 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 	nowBtn := widget.NewButtonWithIcon("Now", theme.ViewRefreshIcon(), func() {
 		t.timestamp.Set(time.Now())
-		t.SetStatus("Updated to now")
 	})
 	nowBtn.Importance = widget.HighImportance
 
@@ -318,7 +287,6 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 			clip := window.Clipboard()
 
 			if clip == nil {
-				t.SetStatus("Clipboard not initialized")
 				return
 			}
 
@@ -329,12 +297,10 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 
 			timestamp, err := PraseStringToTime(clipboardContent)
 			if err != nil {
-				t.SetStatus("Invalid timestamp")
 				return
 			}
 
 			t.timestamp.Set(timestamp)
-			t.SetStatus("Updated from clipboard")
 		}),
 	}
 
@@ -342,10 +308,6 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 }
 
 func (t *TimestampConverter) SetupAndRun() {
-
-	status := widget.NewLabelWithData(t.status)
-	t.SetStatus("Ready")
-
 	leftSide := container.NewVBox()
 	middle := container.NewVBox()
 
@@ -361,7 +323,7 @@ func (t *TimestampConverter) SetupAndRun() {
 	}
 
 	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
-	mainContainer := container.NewBorder(t.NewToolbar(t.window), status, nil, nil, scrollableMiddle)
+	mainContainer := container.NewBorder(t.NewToolbar(t.window), nil, nil, nil, scrollableMiddle)
 
 	go func() {
 		for {
@@ -393,7 +355,6 @@ func (t *TimestampConverter) SetupAndRun() {
 				}
 
 				t.timestamp.Set(timestamp)
-				t.SetStatus("Updated from clipboard")
 			}
 		}
 	}()

@@ -7,7 +7,7 @@ import (
 )
 
 func PraseStringToTime(s string) (time.Time, error) {
-	for format, _ := range FormatLabelMap {
+	for format := range FormatLabelMap {
 		t, err := time.Parse(format, s)
 		if err == nil {
 			if t.Unix() >= 0 && t.Unix() <= 253374914595 {
