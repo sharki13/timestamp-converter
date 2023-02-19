@@ -26,7 +26,6 @@ type TimestampConverter struct {
 	window                fyne.Window
 	app                   fyne.App
 	preferences           *PreferencesSynchronizer
-	menuMaker             *MenuMaker
 }
 
 func NewTimestampConverter(app fyne.App) *TimestampConverter {
@@ -43,7 +42,6 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	ret.preset = binding.NewInt()
 	ret.userPresets = xbinding.NewPresets()
 	ret.preferences = NewPreferencesSynchronizer(app)
-	ret.menuMaker = NewMenuMaker(app, ret.window, &ret)
 
 	ret.SetupAndLoadPreferences()
 
