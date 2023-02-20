@@ -31,6 +31,8 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	return &ret
 }
 
+// Should be called near the end of the function
+// becasue it will block until the window is closed
 func (t *TimestampConverter) ShowAndRun() {
 	t.window.SetMainMenu(t.makeMenu())
 	t.window.SetContent(t.makeContent())
