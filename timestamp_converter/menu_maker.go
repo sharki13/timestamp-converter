@@ -10,13 +10,12 @@ import (
 )
 
 func (t *TimestampConverter) makeMenu() *fyne.MainMenu {
-
 	menus := make([]*fyne.Menu, 0)
 
 	// Mac OS has a built in quit menu,
 	// on other platforms Fyne will add Quit to first menu if it is not defined
 	if runtime.GOOS != "darwin" {
-		fileMenu := fyne.NewMenu("File", fyne.NewMenuItem("Quit", func() {
+		fileMenu := fyne.NewMenu(FileLabel, fyne.NewMenuItem(QuitLabel, func() {
 			t.app.Quit()
 		}))
 
@@ -33,31 +32,29 @@ func (t *TimestampConverter) makeMenu() *fyne.MainMenu {
 }
 
 func (t *TimestampConverter) makeInfoMenu() *fyne.Menu {
-	about := fyne.NewMenuItem("GitHub page", func() {
-		u, _ := url.Parse("https://github.com/sharki13/timestamp-converter")
+	about := fyne.NewMenuItem(GitHubPageLabel, func() {
+		u, _ := url.Parse(ProjectPageURL)
 		_ = t.app.OpenURL(u)
 	})
 
-	return fyne.NewMenu("Help", about)
+	return fyne.NewMenu(HelpLabel, about)
 }
 
 func (t *TimestampConverter) makeThemeMenu() *fyne.Menu {
-	system := fyne.NewMenuItem("System", nil)
-	light := fyne.NewMenuItem("Light", nil)
-	dark := fyne.NewMenuItem("Dark", nil)
-
-	system.Checked = true
+	system := fyne.NewMenuItem(SystemLabel, nil)
+	light := fyne.NewMenuItem(LightLabel, nil)
+	dark := fyne.NewMenuItem(DarkLabel, nil)
 
 	light.Action = func() {
-		t.theme.Set("light")
+		t.theme.Set(LightTheme)
 	}
 
 	dark.Action = func() {
-		t.theme.Set("dark")
+		t.theme.Set(DarkTheme)
 	}
 
 	system.Action = func() {
-		t.theme.Set("system")
+		t.theme.Set(SystemTheme)
 	}
 
 	t.theme.AddListener(binding.NewDataListener(func() {
@@ -67,21 +64,21 @@ func (t *TimestampConverter) makeThemeMenu() *fyne.Menu {
 		}
 
 		switch themeVariant {
-		case "light":
-			t.app.Settings().SetTheme(&myTheme{variant: "light"})
+		case LightTheme:
+			t.app.Settings().SetTheme(&myTheme{variant: LightTheme})
 			light.Checked = true
 			dark.Checked = false
 			system.Checked = false
-		case "dark":
-			t.app.Settings().SetTheme(&myTheme{variant: "dark"})
+		case DarkTheme:
+			t.app.Settings().SetTheme(&myTheme{variant: DarkTheme})
 			light.Checked = false
 			dark.Checked = true
 			system.Checked = false
 		default:
 			if t.app.Settings().ThemeVariant() == theme.VariantLight {
-				t.app.Settings().SetTheme(&myTheme{variant: "light"})
+				t.app.Settings().SetTheme(&myTheme{variant: LightTheme})
 			} else {
-				t.app.Settings().SetTheme(&myTheme{variant: "dark"})
+				t.app.Settings().SetTheme(&myTheme{variant: DarkTheme})
 			}
 			light.Checked = false
 			dark.Checked = false
@@ -89,12 +86,11 @@ func (t *TimestampConverter) makeThemeMenu() *fyne.Menu {
 		}
 	}))
 
-	return fyne.NewMenu("Theme", system, fyne.NewMenuItemSeparator(), light, dark)
+	return fyne.NewMenu(ThemeLabel, system, fyne.NewMenuItemSeparator(), light, dark)
 }
 
 func (t *TimestampConverter) makeFormatMenu() *fyne.Menu {
-
-	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
+	formatMenu := fyne.NewMenu(FormatLabel, make([]*fyne.MenuItem, 0)...)
 
 	for k, label := range FormatLabelMap {
 		format := k

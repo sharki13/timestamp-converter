@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 
+	// to include tzdata in the binary, not all OSes have it like windows
 	_ "time/tzdata"
 )
 

@@ -37,22 +37,6 @@ func (td TimezoneDefinition) Location() *time.Location {
 	return loc
 }
 
-type Preset struct {
-	Id        int
-	Label     string
-	Timezones []int
-}
-
-// Id 0 is reserved for the None preset
-
-const (
-	DeveloperPreset int = iota + 1
-	USPreset
-	EuropePreset
-	USEuropePreset
-	LastInternalId
-)
-
 type TimeonzeId int
 
 const (
@@ -74,29 +58,6 @@ const (
 	AEST_AEDT_Australia_Australia
 	UTC
 )
-
-var DefaultPresets = []Preset{
-	{
-		Id:        DeveloperPreset,
-		Label:     "Developer",
-		Timezones: []int{Local, Unix, UTC, PST_PDT_Pacific_US, CST_CDT_Central_US, CET_CEST_Central_Europe_France},
-	},
-	{
-		Id:        USPreset,
-		Label:     "US",
-		Timezones: []int{Local, HST_Pacific_Honolulu_US, AKST_AKDT_Alaska_US, PST_PDT_Pacific_US, MST_Mountain_US, CST_CDT_Central_US, EST_EDT_Eastern_US, AST_Atlantic_GD},
-	},
-	{
-		Id:        EuropePreset,
-		Label:     "Europe",
-		Timezones: []int{Local, GMT_BST_Greenwich_UK, CET_CEST_Central_Europe_France, EET_EEST_Eastern_Europe_Finland, MSK_Moscow_Russia},
-	},
-	{
-		Id:        USEuropePreset,
-		Label:     "US & Europe",
-		Timezones: []int{Local, HST_Pacific_Honolulu_US, AKST_AKDT_Alaska_US, PST_PDT_Pacific_US, MST_Mountain_US, CST_CDT_Central_US, EST_EDT_Eastern_US, GMT_BST_Greenwich_UK, CET_CEST_Central_Europe_France, EET_EEST_Eastern_Europe_Finland, MSK_Moscow_Russia},
-	},
-}
 
 var Timezones = []TimezoneDefinition{
 	{

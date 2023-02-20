@@ -11,6 +11,12 @@ var (
 	orange = &color.NRGBA{R: 255, G: 125, B: 30, A: 255}
 )
 
+const (
+	LightTheme  = "light"
+	DarkTheme   = "dark"
+	SystemTheme = "system"
+)
+
 type myTheme struct {
 	variant string
 }

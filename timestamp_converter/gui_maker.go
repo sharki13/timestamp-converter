@@ -35,7 +35,7 @@ func (t *TimestampConverter) newTimestampSetItems(tz timezone.TimezoneDefinition
 	timestampEntry := widget.NewEntry()
 
 	timestampEntry.OnChanged = func(text string) {
-		timestamp, err := PraseStringToTime(text)
+		timestamp, err := praseStringToTime(text)
 		if err != nil {
 			return
 		}
@@ -51,7 +51,7 @@ func (t *TimestampConverter) newTimestampSetItems(tz timezone.TimezoneDefinition
 	}
 
 	timestampEntry.Validator = func(text string) error {
-		_, err := PraseStringToTime(text)
+		_, err := praseStringToTime(text)
 		if err != nil {
 			return err
 		}
@@ -216,7 +216,7 @@ func (t *TimestampConverter) newToolbar() *fyne.Container {
 				return
 			}
 
-			timestamp, err := PraseStringToTime(clipboardContent)
+			timestamp, err := praseStringToTime(clipboardContent)
 			if err != nil {
 				return
 			}

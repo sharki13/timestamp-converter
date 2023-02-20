@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func PraseStringToTime(s string) (time.Time, error) {
+func praseStringToTime(s string) (time.Time, error) {
 	for format := range FormatLabelMap {
 		t, err := time.Parse(format, s)
 		if err == nil {
@@ -33,14 +33,4 @@ func contains[K comparable](s []K, e K) bool {
 		}
 	}
 	return false
-}
-
-func RemoveIntFromSlice(slice []int, value int) []int {
-	for i, v := range slice {
-		if v == value {
-			return append(slice[:i], slice[i+1:]...)
-		}
-	}
-
-	return slice
 }

@@ -25,7 +25,7 @@ func (t *TimestampConverter) setupAndLoadPreferences() {
 	err = t.preferences.AddString(prefSync.StringPreference{
 		Key:      "theme",
 		Value:    t.theme,
-		Fallback: "system",
+		Fallback: SystemTheme,
 	})
 
 	if err != nil {
@@ -69,7 +69,7 @@ func (t *TimestampConverter) setupAndLoadPreferences() {
 					continue
 				}
 
-				timestamp, err := PraseStringToTime(cliboardContent)
+				timestamp, err := praseStringToTime(cliboardContent)
 				if err != nil {
 					continue
 				}
