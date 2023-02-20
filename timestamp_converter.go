@@ -62,7 +62,11 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 		Fallback: []int{0},
 	})
 
-	savedTimezones, _ := t.visibleTimezones.Get()
+	if err != nil {
+		panic(err)
+	}
+
+	savedTimezones, err := t.visibleTimezones.Get()
 	for _, timezoneIndex := range savedTimezones {
 		if visible, ok := t.timezonesVisibleState[timezoneIndex]; ok {
 			visible.Set(true)
@@ -72,6 +76,41 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 	if err != nil {
 		panic(err)
 	}
+
+	// run background loop to watch for clipboard changes
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			if t.watchClipboard {
+				clip := t.window.Clipboard()
+
+				if clip == nil {
+					continue
+				}
+
+				cliboardContent := clip.Content()
+				if cliboardContent == "" {
+					continue
+				}
+
+				timestamp, err := PraseStringToTime(cliboardContent)
+				if err != nil {
+					continue
+				}
+
+				currentTimestamp, err := t.timestamp.Get()
+				if err != nil {
+					panic(err)
+				}
+
+				if timestamp == currentTimestamp {
+					continue
+				}
+
+				t.timestamp.Set(timestamp)
+			}
+		}
+	}()
 }
 
 type TimestampItemsSet struct {
@@ -214,7 +253,7 @@ func (t *TimestampConverter) NewTimezoneAddEntry() *xwidget.CompletionEntry {
 		entry.ShowCompletion()
 	}
 
-	entry.OnSubmitted = func(tz string) {
+	entry.OnSubmitted = func(string) {
 		if len(entry.Options) != 0 {
 			for _, timeZoneDefinition := range timezone.Timezones {
 				if timeZoneDefinition.Label == entry.Options[0] {
@@ -289,7 +328,7 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 	return container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewTimezoneAddEntry())
 }
 
-func (t *TimestampConverter) SetupAndRun() {
+func (t *TimestampConverter) MakeContent() *fyne.Container {
 	leftSide := container.NewVBox()
 	middle := container.NewVBox()
 
@@ -310,44 +349,12 @@ func (t *TimestampConverter) SetupAndRun() {
 	}
 
 	scrollableMiddle := container.NewVScroll(container.NewBorder(nil, nil, leftSide, nil, middle))
-	mainContainer := container.NewBorder(t.NewToolbar(t.window), nil, nil, nil, scrollableMiddle)
+	return container.NewBorder(t.NewToolbar(t.window), nil, nil, nil, scrollableMiddle)
+}
 
-	go func() {
-		for {
-			time.Sleep(time.Second)
-			if t.watchClipboard {
-				clip := t.window.Clipboard()
-
-				if clip == nil {
-					continue
-				}
-
-				cliboardContent := clip.Content()
-				if cliboardContent == "" {
-					continue
-				}
-
-				timestamp, err := PraseStringToTime(cliboardContent)
-				if err != nil {
-					continue
-				}
-
-				currentTimestamp, err := t.timestamp.Get()
-				if err != nil {
-					panic(err)
-				}
-
-				if timestamp == currentTimestamp {
-					continue
-				}
-
-				t.timestamp.Set(timestamp)
-			}
-		}
-	}()
-
+func (t *TimestampConverter) ShowAndRun() {
 	t.window.SetMainMenu(t.MakeMenu())
-	t.window.SetContent(mainContainer)
+	t.window.SetContent(t.MakeContent())
 	t.SetupAndLoadPreferences()
 	t.window.Resize(fyne.NewSize(600, 400))
 	t.window.ShowAndRun()

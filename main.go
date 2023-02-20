@@ -8,5 +8,5 @@ func main() {
 	app := app.NewWithID("com.github.sharki13.timestamp-converter")
 	timestampConverter := NewTimestampConverter(app)
 
-	timestampConverter.SetupAndRun()
+	timestampConverter.ShowAndRun()
 }
