@@ -80,32 +80,9 @@ type TimestampItemsSet struct {
 	Visible                 binding.Bool
 }
 
-func attachEntryToFormatOrTimestampChange(entry *widget.Entry, timezoneDefinition timezone.TimezoneDefinition, timestamp xbinding.Time, format binding.String) {
-	onFormatOrTimestampChange := binding.NewDataListener(func() {
-		timestamp, err := timestamp.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		format, err := format.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		new_text := timezoneDefinition.StringTime(timestamp, format)
-
-		if new_text != entry.Text {
-			entry.SetText(new_text)
-		}
-	})
-
-	timestamp.AddListener(onFormatOrTimestampChange)
-	format.AddListener(onFormatOrTimestampChange)
-}
-
-func (t *TimestampConverter) makeCopyButtonForEntry(entry *widget.Entry, window fyne.Window) *widget.Button {
+func (t *TimestampConverter) makeCopyButtonForEntry(entry *widget.Entry) *widget.Button {
 	return widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-		clip := window.Clipboard()
+		clip := t.window.Clipboard()
 
 		if clip == nil {
 			return
@@ -116,10 +93,9 @@ func (t *TimestampConverter) makeCopyButtonForEntry(entry *widget.Entry, window 
 }
 
 func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition, window fyne.Window) TimestampItemsSet {
-	entry := widget.NewEntry()
-	attachEntryToFormatOrTimestampChange(entry, tz, t.timestamp, t.format)
+	timestampEntry := widget.NewEntry()
 
-	entry.OnChanged = func(text string) {
+	timestampEntry.OnChanged = func(text string) {
 		timestamp, err := PraseStringToTime(text)
 		if err != nil {
 			return
@@ -135,7 +111,7 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 		}
 	}
 
-	entry.Validator = func(text string) error {
+	timestampEntry.Validator = func(text string) error {
 		_, err := PraseStringToTime(text)
 		if err != nil {
 			return err
@@ -144,10 +120,31 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 		return nil
 	}
 
-	visibleBind := binding.NewBool()
+	onFormatOrTimestampChange := binding.NewDataListener(func() {
+		timestamp, err := t.timestamp.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		format, err := t.format.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		new_text := tz.StringTime(timestamp, format)
+
+		if new_text != timestampEntry.Text {
+			timestampEntry.SetText(new_text)
+		}
+	})
+
+	t.timestamp.AddListener(onFormatOrTimestampChange)
+	t.format.AddListener(onFormatOrTimestampChange)
+
+	visibleState := binding.NewBool()
 
 	deleteBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
-		visibleBind.Set(false)
+		visibleState.Set(false)
 
 		for id, state := range t.timezonesVisibleState {
 			visibleIds := make([]int, 0)
@@ -165,13 +162,12 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 		deleteBtn.Disable()
 	}
 
-	label := widget.NewLabel(tz.Label)
-	deleteBtnLabelContainer := container.NewHBox(deleteBtn, label)
+	deleteBtnLabelContainer := container.NewHBox(deleteBtn, widget.NewLabel(tz.Label))
 
-	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, t.makeCopyButtonForEntry(entry, window), entry)
+	entryCopyBtnContainer := container.NewBorder(nil, nil, nil, t.makeCopyButtonForEntry(timestampEntry), timestampEntry)
 
 	visibleHandler := binding.NewDataListener(func() {
-		visible, err := visibleBind.Get()
+		visible, err := visibleState.Get()
 		if err != nil {
 			panic(err)
 		}
@@ -179,12 +175,12 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 		deleteBtnLabelContainer.Hidden = !visible
 		entryCopyBtnContainer.Hidden = !visible
 	})
-	visibleBind.AddListener(visibleHandler)
+	visibleState.AddListener(visibleHandler)
 
 	return TimestampItemsSet{
 		DeleteBtnLabelContainer: deleteBtnLabelContainer,
 		EntryCopyBtnContainer:   entryCopyBtnContainer,
-		Visible:                 visibleBind,
+		Visible:                 visibleState,
 	}
 }
 
