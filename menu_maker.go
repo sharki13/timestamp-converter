@@ -81,7 +81,6 @@ func (t *TimestampConverter) MakeThemeMenu() *fyne.Menu {
 func (t *TimestampConverter) MakeFormatMenu() *fyne.Menu {
 
 	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
-	currentFormat, _ := t.format.Get()
 
 	for k, label := range FormatLabelMap {
 		format := k
@@ -89,12 +88,6 @@ func (t *TimestampConverter) MakeFormatMenu() *fyne.Menu {
 		formatMenuItem := fyne.NewMenuItem(label, func() {
 			t.format.Set(format)
 		})
-
-		if format == currentFormat {
-			formatMenuItem.Checked = true
-		} else {
-			formatMenuItem.Checked = false
-		}
 
 		formatMenu.Items = append(formatMenu.Items, formatMenuItem)
 	}

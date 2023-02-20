@@ -64,7 +64,9 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 
 	savedTimezones, _ := t.visibleTimezones.Get()
 	for _, timezoneIndex := range savedTimezones {
-		t.timezonesVisibleState[timezoneIndex].Set(true)
+		if visible, ok := t.timezonesVisibleState[timezoneIndex]; ok {
+			visible.Set(true)
+		}
 	}
 
 	if err != nil {
