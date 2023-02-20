@@ -184,44 +184,40 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 	}
 }
 
-func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
+func (t *TimestampConverter) getOptions(text string) []string {
+	options := []string{}
+
+	visibleIds := []int{}
+
+	for k, e := range t.timezonesVisibleState {
+		visible, _ := e.Get()
+		if visible {
+			visibleIds = append(visibleIds, k)
+		}
+	}
+
+	for _, timeZoneDefinition := range timezone.Timezones {
+		if strings.Contains(strings.ToLower(timeZoneDefinition.Label), strings.ToLower(text)) && !contains(visibleIds, timeZoneDefinition.Id) {
+			options = append(options, timeZoneDefinition.Label)
+		}
+	}
+
+	return options
+}
+
+func (t *TimestampConverter) NewTimezoneAddEntry() *xwidget.CompletionEntry {
 	entry := xwidget.NewCompletionEntry([]string{})
 	entry.PlaceHolder = "Add"
 
-	getOptions := func(text string) []string {
-		options := []string{}
-
-		visibleIds := []int{}
-
-		for k, e := range t.timezonesVisibleState {
-			visible, _ := e.Get()
-			if visible {
-				visibleIds = append(visibleIds, k)
-			}
-		}
-
-		for _, timeZoneDefinition := range timezone.Timezones {
-			if strings.Contains(strings.ToLower(timeZoneDefinition.Label), strings.ToLower(text)) && !contains(visibleIds, timeZoneDefinition.Id) {
-				options = append(options, timeZoneDefinition.Label)
-			}
-		}
-
-		return options
-	}
-
-	entry.OnChanged = func(timezone string) {
-		options := getOptions(timezone)
-
-		entry.SetOptions(options)
+	entry.OnChanged = func(text string) {
+		entry.SetOptions(t.getOptions(text))
 		entry.ShowCompletion()
 	}
 
 	entry.OnSubmitted = func(tz string) {
-		options := getOptions(tz)
-
-		if len(options) != 0 {
+		if len(entry.Options) != 0 {
 			for _, timeZoneDefinition := range timezone.Timezones {
-				if timeZoneDefinition.Label == options[0] {
+				if timeZoneDefinition.Label == entry.Options[0] {
 					t.timezonesVisibleState[timeZoneDefinition.Id].Set(true)
 					break
 				}
@@ -290,7 +286,7 @@ func (t *TimestampConverter) NewToolbar(window fyne.Window) *fyne.Container {
 		}),
 	}
 
-	return container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewCompletionAddEntry())
+	return container.NewBorder(nil, nil, container.NewHBox(leftSideToolbarItems...), container.NewHBox(rightSideToolbarItems...), t.NewTimezoneAddEntry())
 }
 
 func (t *TimestampConverter) SetupAndRun() {
