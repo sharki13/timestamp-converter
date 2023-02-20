@@ -20,7 +20,6 @@ type TimestampConverter struct {
 	timestamp             xbinding.Time
 	format                binding.String
 	watchClipboard        bool
-	preset                binding.Int
 	window                fyne.Window
 	app                   fyne.App
 	preferences           *prefSync.PreferencesSynchronizer
@@ -36,7 +35,6 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	ret.timestamp = xbinding.NewTime()
 	ret.timestamp.Set(time.Now())
 	ret.format = binding.NewString()
-	ret.preset = binding.NewInt()
 	ret.preferences = prefSync.NewPreferencesSynchronizer(app)
 
 	ret.SetupAndLoadPreferences()
@@ -57,54 +55,6 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 	if err != nil {
 		panic(err)
 	}
-
-	err = t.preferences.AddInt(prefSync.IntPreference{
-		Key:      "preset",
-		Value:    t.preset,
-		Fallback: 1,
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-	if err != nil {
-		panic(err)
-	}
-
-	savedPreset, _ := t.preset.Get()
-
-	if savedPreset > len(timezone.DefaultPresets) {
-		t.preset.Set(1)
-	}
-}
-
-// Should be called after UI setup
-func (t *TimestampConverter) BindStateToUI(app fyne.App) {
-
-	t.preset.AddListener(binding.NewDataListener(func() {
-		p, err := t.preset.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		for _, e := range t.timezonesVisibleState {
-			e.Set(false)
-		}
-
-		for _, presetDef := range timezone.DefaultPresets {
-			if presetDef.Id == p {
-				for _, id := range presetDef.Timezones {
-					// check if id key exists
-					if _, ok := t.timezonesVisibleState[id]; !ok {
-						continue
-					}
-
-					t.timezonesVisibleState[id].Set(true)
-				}
-			}
-		}
-	}))
 }
 
 type TimestampItemsSet struct {
@@ -252,7 +202,6 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 					break
 				}
 			}
-
 			entry.SetText("")
 			entry.HideCompletion()
 		}
@@ -317,7 +266,12 @@ func (t *TimestampConverter) SetupAndRun() {
 
 		leftSide.Add(items.DeleteBtnLabelContainer)
 		middle.Add(items.EntryCopyBtnContainer)
-		items.Visible.Set(true)
+
+		if tz.Type == timezone.LocalTimezoneType {
+			items.Visible.Set(true)
+		} else {
+			items.Visible.Set(false)
+		}
 
 		// add to visible changer
 		t.timezonesVisibleState[tz.Id] = items.Visible
@@ -360,7 +314,6 @@ func (t *TimestampConverter) SetupAndRun() {
 		}
 	}()
 
-	t.BindStateToUI(t.app)
 	t.window.SetMainMenu(t.MakeMenu())
 	t.window.SetContent(mainContainer)
 	t.window.Resize(fyne.NewSize(600, 400))

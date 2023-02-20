@@ -4,7 +4,6 @@ import (
 	"net/url"
 	"runtime"
 
-	"com.sharki13/timestamp.converter/timezone"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
@@ -25,7 +24,6 @@ func (t *TimestampConverter) MakeMenu() *fyne.MainMenu {
 	}
 
 	menus = append(menus,
-		t.MakePresetMenu(),
 		t.MakeFormatMenu(),
 		t.MakeThemeMenu(),
 		t.MakeInfoMenu(),
@@ -119,38 +117,4 @@ func (t *TimestampConverter) MakeFormatMenu() *fyne.Menu {
 	}))
 
 	return formatMenu
-}
-
-func makePresetMenuItem(label string, id int, currentPresetBound binding.Int) *fyne.MenuItem {
-	presetMenuItem := fyne.NewMenuItem(label, func() {
-		currentPresetBound.Set(id)
-	})
-
-	currentPresetBound.AddListener(binding.NewDataListener(func() {
-		currentPreset, err := currentPresetBound.Get()
-		if err != nil {
-			panic(err)
-		}
-
-		if currentPreset == id {
-			presetMenuItem.Checked = true
-		} else {
-			presetMenuItem.Checked = false
-		}
-	}))
-
-	presetMenuItem.Checked = true
-
-	return presetMenuItem
-}
-
-func (t *TimestampConverter) MakePresetMenu() *fyne.Menu {
-	items := make([]*fyne.MenuItem, 0)
-
-	for _, preset := range timezone.DefaultPresets {
-		preset := preset
-		items = append(items, makePresetMenuItem(preset.Label, preset.Id, t.preset))
-	}
-
-	return fyne.NewMenu("Presets", items...)
 }
