@@ -1,0 +1,8 @@
+Website = "https://github.com/sharki13/timestamp-converter"
+
+[Details]
+  Icon = "assets/icon.png"
+  Name = "Timestamp Converter"
+  ID = "github.com.sharki13.timestamp-converter"
+  Version = "1.0.0"
+  Build = 3

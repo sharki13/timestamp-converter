@@ -26,7 +26,7 @@ type TimestampConverter struct {
 func NewTimestampConverter(app fyne.App) *TimestampConverter {
 	ret := TimestampConverter{
 		app:    app,
-		window: app.NewWindow("Timestamp converter"),
+		window: app.NewWindow(TimestampConverterLabel),
 	}
 
 	ret.window.SetIcon(theme.HistoryIcon())
