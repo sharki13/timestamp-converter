@@ -1,4 +1,4 @@
-package main
+package timestamp_converter
 
 import (
 	prefSync "com.sharki13/timestamp.converter/preferences"

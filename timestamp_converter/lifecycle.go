@@ -1,4 +1,4 @@
-package main
+package timestamp_converter
 
 import (
 	"time"
