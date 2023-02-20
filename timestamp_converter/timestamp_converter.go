@@ -5,6 +5,8 @@ import (
 	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
+
+	_ "time/tzdata"
 )
 
 type TimestampConverter struct {
