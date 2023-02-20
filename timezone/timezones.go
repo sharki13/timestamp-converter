@@ -11,18 +11,22 @@ const (
 	LocalTimezoneType TimezoneType = iota
 	WithLocationTimzoneType
 	UnixTimezoneType
+	FixedOffsetTimezoneType
 )
 
 type TimezoneDefinition struct {
 	Id               int
 	LocationAsString string
 	Label            string
+	Offset           int
 	Type             TimezoneType
 }
 
 func (td TimezoneDefinition) StringTime(t time.Time, format string) string {
 	if td.Type == UnixTimezoneType {
 		return strconv.FormatInt(t.Unix(), 10)
+	} else if td.Type == FixedOffsetTimezoneType {
+		return t.In(time.FixedZone(td.Label, td.Offset)).Format(format)
 	} else {
 		return t.In(td.Location()).Format(format)
 	}
@@ -50,6 +54,7 @@ const (
 	EST_EDT_Eastern_US
 	AST_Atlantic_GD
 	GMT_BST_Greenwich_UK
+	WET_WEST_Western_Europe
 	CET_CEST_Central_Europe_France
 	EET_EEST_Eastern_Europe_Finland
 	MSK_Moscow_Russia
@@ -57,6 +62,7 @@ const (
 	CST_China_China
 	AEST_AEDT_Australia_Australia
 	UTC
+	LastNamedId
 )
 
 var Timezones = []TimezoneDefinition{
@@ -71,6 +77,12 @@ var Timezones = []TimezoneDefinition{
 		LocationAsString: "UTC",
 		Label:            "Unix",
 		Type:             UnixTimezoneType,
+	},
+	{
+		Id:               UTC,
+		LocationAsString: "UTC",
+		Label:            "UTC",
+		Type:             WithLocationTimzoneType,
 	},
 	{
 		Id:               HST_Pacific_Honolulu_US,
@@ -121,6 +133,12 @@ var Timezones = []TimezoneDefinition{
 		Type:             WithLocationTimzoneType,
 	},
 	{
+		Id:               WET_WEST_Western_Europe,
+		LocationAsString: "Europe/Lisbon",
+		Label:            "WET/WEST (Western Europe), Portugal",
+		Type:             WithLocationTimzoneType,
+	},
+	{
 		Id:               CET_CEST_Central_Europe_France,
 		LocationAsString: "Europe/Paris",
 		Label:            "CET/CEST (Central Europe), France",
@@ -157,9 +175,157 @@ var Timezones = []TimezoneDefinition{
 		Type:             WithLocationTimzoneType,
 	},
 	{
-		Id:               UTC,
+		Id:               LastNamedId,
 		LocationAsString: "UTC",
-		Label:            "UTC",
-		Type:             WithLocationTimzoneType,
+		Label:            "UTC-11",
+		Offset:           -11 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 1,
+		LocationAsString: "UTC",
+		Label:            "UTC-10",
+		Offset:           -10 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 2,
+		LocationAsString: "UTC",
+		Label:            "UTC-9",
+		Offset:           -9 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 3,
+		LocationAsString: "UTC",
+		Label:            "UTC-8",
+		Offset:           -8 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 4,
+		LocationAsString: "UTC",
+		Label:            "UTC-7",
+		Offset:           -7 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 5,
+		LocationAsString: "UTC",
+		Label:            "UTC-6",
+		Offset:           -6 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 6,
+		LocationAsString: "UTC",
+		Label:            "UTC-5",
+		Offset:           -5 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 7,
+		LocationAsString: "UTC",
+		Label:            "UTC-4",
+		Offset:           -4 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 8,
+		LocationAsString: "UTC",
+		Label:            "UTC-3",
+		Offset:           -3 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 9,
+		LocationAsString: "UTC",
+		Label:            "UTC-2",
+		Offset:           -2 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 10,
+		LocationAsString: "UTC",
+		Label:            "UTC-1",
+		Offset:           -1 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 11,
+		LocationAsString: "UTC",
+		Label:            "UTC+1",
+		Offset:           1 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 12,
+		LocationAsString: "UTC",
+		Label:            "UTC+2",
+		Offset:           2 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 13,
+		LocationAsString: "UTC",
+		Label:            "UTC+3",
+		Offset:           3 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 14,
+		LocationAsString: "UTC",
+		Label:            "UTC+4",
+		Offset:           4 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 15,
+		LocationAsString: "UTC",
+		Label:            "UTC+5",
+		Offset:           5 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 16,
+		LocationAsString: "UTC",
+		Label:            "UTC+6",
+		Offset:           6 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 17,
+		LocationAsString: "UTC",
+		Label:            "UTC+7",
+		Offset:           7 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 18,
+		LocationAsString: "UTC",
+		Label:            "UTC+8",
+		Offset:           8 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 19,
+		LocationAsString: "UTC",
+		Label:            "UTC+9",
+		Offset:           9 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 20,
+		LocationAsString: "UTC",
+		Label:            "UTC+10",
+		Offset:           10 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
+	},
+	{
+		Id:               LastNamedId + 21,
+		LocationAsString: "UTC",
+		Label:            "UTC+11",
+		Offset:           11 * 60 * 60,
+		Type:             FixedOffsetTimezoneType,
 	},
 }

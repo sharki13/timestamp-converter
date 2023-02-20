@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	app := app.NewWithID("com.github.sharki13.timestamp-converter")
+	app := app.NewWithID("github.com.sharki13.timestamp-converter")
 	tc := gui.NewTimestampConverter(app)
 
 	tc.ShowAndRun()
