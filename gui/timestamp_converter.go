@@ -3,6 +3,7 @@ package gui
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/theme"
 	prefSync "github.com/sharki13/timestamp-converter/preferences"
 	"github.com/sharki13/timestamp-converter/xbinding"
 
@@ -27,6 +28,8 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 		app:    app,
 		window: app.NewWindow("Timestamp converter"),
 	}
+
+	ret.window.SetIcon(theme.HistoryIcon())
 
 	ret.initialize()
 
