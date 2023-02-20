@@ -9,7 +9,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-func (t *TimestampConverter) MakeMenu() *fyne.MainMenu {
+func (t *TimestampConverter) makeMenu() *fyne.MainMenu {
 
 	menus := make([]*fyne.Menu, 0)
 
@@ -24,15 +24,15 @@ func (t *TimestampConverter) MakeMenu() *fyne.MainMenu {
 	}
 
 	menus = append(menus,
-		t.MakeFormatMenu(),
-		t.MakeThemeMenu(),
-		t.MakeInfoMenu(),
+		t.makeFormatMenu(),
+		t.makeThemeMenu(),
+		t.makeInfoMenu(),
 	)
 
 	return fyne.NewMainMenu(menus...)
 }
 
-func (t *TimestampConverter) MakeInfoMenu() *fyne.Menu {
+func (t *TimestampConverter) makeInfoMenu() *fyne.Menu {
 	about := fyne.NewMenuItem("GitHub page", func() {
 		u, _ := url.Parse("https://github.com/sharki13/timestamp-converter")
 		_ = t.app.OpenURL(u)
@@ -41,7 +41,7 @@ func (t *TimestampConverter) MakeInfoMenu() *fyne.Menu {
 	return fyne.NewMenu("Help", about)
 }
 
-func (t *TimestampConverter) MakeThemeMenu() *fyne.Menu {
+func (t *TimestampConverter) makeThemeMenu() *fyne.Menu {
 	system := fyne.NewMenuItem("System", nil)
 	light := fyne.NewMenuItem("Light", nil)
 	dark := fyne.NewMenuItem("Dark", nil)
@@ -78,7 +78,7 @@ func (t *TimestampConverter) MakeThemeMenu() *fyne.Menu {
 	return fyne.NewMenu("Theme", system, fyne.NewMenuItemSeparator(), light, dark)
 }
 
-func (t *TimestampConverter) MakeFormatMenu() *fyne.Menu {
+func (t *TimestampConverter) makeFormatMenu() *fyne.Menu {
 
 	formatMenu := fyne.NewMenu("Format", make([]*fyne.MenuItem, 0)...)
 
