@@ -166,10 +166,13 @@ func (p *PreferencesSynchronizer) AddIntArray(e IntArrayPreference) error {
 	}
 
 	serialized := p.app.Preferences().StringWithFallback(e.Key, "[]")
-
 	deserialized := make([]int, 0)
 
-	if err := json.Unmarshal([]byte(serialized), &deserialized); err != nil {
+	if serialized != "[]" {
+		if err := json.Unmarshal([]byte(serialized), &deserialized); err != nil {
+			return err
+		}
+	} else {
 		deserialized = e.Fallback
 	}
 
