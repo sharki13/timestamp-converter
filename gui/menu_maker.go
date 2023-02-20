@@ -1,4 +1,4 @@
-package timestamp_converter
+package gui
 
 import (
 	"net/url"

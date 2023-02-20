@@ -3,9 +3,9 @@ package preferences
 import (
 	"reflect"
 
-	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/test"
+	"github.com/sharki13/timestamp-converter/xbinding"
 
 	"testing"
 )

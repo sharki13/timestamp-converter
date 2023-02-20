@@ -1,4 +1,4 @@
-package timestamp_converter
+package gui
 
 const (
 	FileLabel       = "File"

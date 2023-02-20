@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
+	"github.com/sharki13/timestamp-converter/xbinding"
 )
 
 type Keyed interface {

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"com.sharki13/timestamp.converter/timestamp_converter"
 	"fyne.io/fyne/v2/app"
+	"github.com/sharki13/timestamp-converter/gui"
 )
 
 func main() {
 	app := app.NewWithID("com.github.sharki13.timestamp-converter")
-	tc := timestamp_converter.NewTimestampConverter(app)
+	tc := gui.NewTimestampConverter(app)
 
 	tc.ShowAndRun()
 }

@@ -1,11 +1,11 @@
-package timestamp_converter
+package gui
 
 import (
 	"time"
 
-	prefSync "com.sharki13/timestamp.converter/preferences"
-	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2/data/binding"
+	prefSync "github.com/sharki13/timestamp-converter/preferences"
+	"github.com/sharki13/timestamp-converter/xbinding"
 )
 
 // Sets up the preferences and loads them

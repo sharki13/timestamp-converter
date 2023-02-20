@@ -1,10 +1,10 @@
-package timestamp_converter
+package gui
 
 import (
-	prefSync "com.sharki13/timestamp.converter/preferences"
-	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
+	prefSync "github.com/sharki13/timestamp-converter/preferences"
+	"github.com/sharki13/timestamp-converter/xbinding"
 
 	// to include tzdata in the binary, not all OSes have it like windows
 	_ "time/tzdata"

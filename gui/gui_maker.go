@@ -1,16 +1,16 @@
-package timestamp_converter
+package gui
 
 import (
 	"strings"
 	"time"
 
-	"com.sharki13/timestamp.converter/timezone"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
+	"github.com/sharki13/timestamp-converter/timezone"
 )
 
 type timestampItemsSet struct {
