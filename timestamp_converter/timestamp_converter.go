@@ -15,6 +15,7 @@ type TimestampConverter struct {
 	timestamp             xbinding.Time
 	format                binding.String
 	watchClipboard        bool
+	theme                 binding.String
 	window                fyne.Window
 	app                   fyne.App
 	preferences           *prefSync.PreferencesSynchronizer

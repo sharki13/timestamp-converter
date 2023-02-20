@@ -46,34 +46,48 @@ func (t *TimestampConverter) makeThemeMenu() *fyne.Menu {
 	light := fyne.NewMenuItem("Light", nil)
 	dark := fyne.NewMenuItem("Dark", nil)
 
-	if t.app.Settings().Theme() == theme.LightTheme() {
-		light.Checked = true
-	} else if t.app.Settings().Theme() == theme.DarkTheme() {
-		dark.Checked = true
-	} else {
-		system.Checked = true
-	}
+	system.Checked = true
 
 	light.Action = func() {
-		t.app.Settings().SetTheme(theme.LightTheme())
-		light.Checked = true
-		dark.Checked = false
-		system.Checked = false
+		t.theme.Set("light")
 	}
 
 	dark.Action = func() {
-		t.app.Settings().SetTheme(theme.DarkTheme())
-		light.Checked = false
-		dark.Checked = true
-		system.Checked = false
+		t.theme.Set("dark")
 	}
 
 	system.Action = func() {
-		t.app.Settings().SetTheme(theme.DefaultTheme())
-		light.Checked = false
-		dark.Checked = false
-		system.Checked = true
+		t.theme.Set("system")
 	}
+
+	t.theme.AddListener(binding.NewDataListener(func() {
+		themeVariant, err := t.theme.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		switch themeVariant {
+		case "light":
+			t.app.Settings().SetTheme(&myTheme{variant: "light"})
+			light.Checked = true
+			dark.Checked = false
+			system.Checked = false
+		case "dark":
+			t.app.Settings().SetTheme(&myTheme{variant: "dark"})
+			light.Checked = false
+			dark.Checked = true
+			system.Checked = false
+		default:
+			if t.app.Settings().ThemeVariant() == theme.VariantLight {
+				t.app.Settings().SetTheme(&myTheme{variant: "light"})
+			} else {
+				t.app.Settings().SetTheme(&myTheme{variant: "dark"})
+			}
+			light.Checked = false
+			dark.Checked = false
+			system.Checked = true
+		}
+	}))
 
 	return fyne.NewMenu("Theme", system, fyne.NewMenuItemSeparator(), light, dark)
 }

@@ -22,6 +22,16 @@ func (t *TimestampConverter) setupAndLoadPreferences() {
 		panic(err)
 	}
 
+	err = t.preferences.AddString(prefSync.StringPreference{
+		Key:      "theme",
+		Value:    t.theme,
+		Fallback: "system",
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
 	err = t.preferences.AddIntArray(prefSync.IntArrayPreference{
 		Key:      "visibleTimezones",
 		Value:    t.visibleTimezones,
@@ -85,5 +95,6 @@ func (t *TimestampConverter) initialize() {
 	t.timestamp = xbinding.NewTime()
 	t.timestamp.Set(time.Now())
 	t.format = binding.NewString()
+	t.theme = binding.NewString()
 	t.preferences = prefSync.NewPreferencesSynchronizer(t.app)
 }
