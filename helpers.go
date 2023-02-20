@@ -34,3 +34,13 @@ func contains[K comparable](s []K, e K) bool {
 	}
 	return false
 }
+
+func RemoveIntFromSlice(slice []int, value int) []int {
+	for i, v := range slice {
+		if v == value {
+			return append(slice[:i], slice[i+1:]...)
+		}
+	}
+
+	return slice
+}
