@@ -1,8 +1,10 @@
 package preferences
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"com.sharki13/timestamp.converter/xbinding"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 )
@@ -35,6 +37,16 @@ func (i IntPreference) GetKey() string {
 	return i.Key
 }
 
+type IntArrayPreference struct {
+	Key      string
+	Value    xbinding.IntArray
+	Fallback []int
+}
+
+func (i IntArrayPreference) GetKey() string {
+	return i.Key
+}
+
 // Preference that is stored as a boolean
 // key: the key of the preference, has to be unique across all preferences
 type BoolPreference struct {
@@ -50,10 +62,11 @@ func (b BoolPreference) GetKey() string {
 // PreferencesSynchronizer is used to sync preferences
 // between bindings and the fyne preferences
 type PreferencesSynchronizer struct {
-	stringPreferences []StringPreference
-	intPreferences    []IntPreference
-	boolPreferences   []BoolPreference
-	app               fyne.App
+	stringPreferences   []StringPreference
+	intPreferences      []IntPreference
+	boolPreferences     []BoolPreference
+	intArrayPreferences []IntArrayPreference
+	app                 fyne.App
 }
 
 // Creates a new preferences sync
@@ -67,6 +80,7 @@ func NewPreferencesSynchronizer(app fyne.App) *PreferencesSynchronizer {
 	pref.stringPreferences = make([]StringPreference, 0)
 	pref.intPreferences = make([]IntPreference, 0)
 	pref.boolPreferences = make([]BoolPreference, 0)
+	pref.intArrayPreferences = make([]IntArrayPreference, 0)
 
 	return &pref
 }
@@ -143,6 +157,43 @@ func (p *PreferencesSynchronizer) AddBool(e BoolPreference) error {
 	return nil
 }
 
+// Adds a new int array preference to the synchronizer
+// and sets the value to the current value of the preference
+// or the fallback value if the preference is not set
+func (p *PreferencesSynchronizer) AddIntArray(e IntArrayPreference) error {
+	if p.isKeyExisting(e.Key) {
+		return fmt.Errorf("key %s is already in use", e.Key)
+	}
+
+	serialized := p.app.Preferences().StringWithFallback(e.Key, "[]")
+
+	deserialized := make([]int, 0)
+
+	if err := json.Unmarshal([]byte(serialized), &deserialized); err != nil {
+		deserialized = e.Fallback
+	}
+
+	e.Value.Set(deserialized)
+
+	p.intArrayPreferences = append(p.intArrayPreferences, e)
+
+	e.Value.AddListener(binding.NewDataListener(func() {
+		v, err := e.Value.Get()
+		if err != nil {
+			panic(err)
+		}
+
+		serialized, err := json.Marshal(v)
+		if err != nil {
+			panic(err)
+		}
+
+		p.app.Preferences().SetString(e.Key, string(serialized))
+	}))
+
+	return nil
+}
+
 func isKeyExistInCollection[T Keyed](key string, collection []T) bool {
 	for _, pref := range collection {
 		if pref.GetKey() == key {
@@ -163,6 +214,10 @@ func (p *PreferencesSynchronizer) isKeyExisting(key string) bool {
 	}
 
 	if exist := isKeyExistInCollection(key, p.boolPreferences); exist {
+		return true
+	}
+
+	if exist := isKeyExistInCollection(key, p.intArrayPreferences); exist {
 		return true
 	}
 

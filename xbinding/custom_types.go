@@ -67,3 +67,7 @@ func (t *IntArray) Get() ([]int, error) {
 
 	return ret, nil
 }
+
+func (t *IntArray) AddListener(listener binding.DataListener) {
+	t.value.AddListener(listener)
+}

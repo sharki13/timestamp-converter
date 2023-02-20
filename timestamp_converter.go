@@ -17,6 +17,7 @@ import (
 
 type TimestampConverter struct {
 	timezonesVisibleState map[int]binding.Bool
+	visibleTimezones      xbinding.IntArray
 	timestamp             xbinding.Time
 	format                binding.String
 	watchClipboard        bool
@@ -33,11 +34,10 @@ func NewTimestampConverter(app fyne.App) *TimestampConverter {
 
 	ret.timezonesVisibleState = make(map[int]binding.Bool, 0)
 	ret.timestamp = xbinding.NewTime()
+	ret.visibleTimezones = xbinding.NewIntArray()
 	ret.timestamp.Set(time.Now())
 	ret.format = binding.NewString()
 	ret.preferences = prefSync.NewPreferencesSynchronizer(app)
-
-	ret.SetupAndLoadPreferences()
 
 	return &ret
 }
@@ -51,6 +51,21 @@ func (t *TimestampConverter) SetupAndLoadPreferences() {
 		Value:    t.format,
 		Fallback: time.RFC3339,
 	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = t.preferences.AddIntArray(prefSync.IntArrayPreference{
+		Key:      "visibleTimezones",
+		Value:    t.visibleTimezones,
+		Fallback: []int{0},
+	})
+
+	savedTimezones, _ := t.visibleTimezones.Get()
+	for _, timezoneIndex := range savedTimezones {
+		t.timezonesVisibleState[timezoneIndex].Set(true)
+	}
 
 	if err != nil {
 		panic(err)
@@ -98,6 +113,16 @@ func (t *TimestampConverter) MakeCopyButtonForEntry(entry *widget.Entry, window 
 	})
 }
 
+func RemoveIntFromSlice(slice []int, value int) []int {
+	for i, v := range slice {
+		if v == value {
+			return append(slice[:i], slice[i+1:]...)
+		}
+	}
+
+	return slice
+}
+
 func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition, window fyne.Window) TimestampItemsSet {
 	entry := widget.NewEntry()
 	t.AttachEntryToFormatOrTimestampChange(entry, tz)
@@ -131,6 +156,17 @@ func (t *TimestampConverter) NewTimestampSetItems(tz timezone.TimezoneDefinition
 
 	deleteBtn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
 		visibleBind.Set(false)
+
+		for id, state := range t.timezonesVisibleState {
+			visibleIds := make([]int, 0)
+
+			visible, _ := state.Get()
+			if visible {
+				visibleIds = append(visibleIds, id)
+			}
+
+			t.visibleTimezones.Set(visibleIds)
+		}
 	})
 
 	if tz.Type == timezone.LocalTimezoneType {
@@ -202,6 +238,18 @@ func (t *TimestampConverter) NewCompletionAddEntry() *xwidget.CompletionEntry {
 					break
 				}
 			}
+
+			visibleTimezones := make([]int, 0)
+
+			for k, e := range t.timezonesVisibleState {
+				visible, _ := e.Get()
+				if visible {
+					visibleTimezones = append(visibleTimezones, k)
+				}
+			}
+
+			t.visibleTimezones.Set(visibleTimezones)
+
 			entry.SetText("")
 			entry.HideCompletion()
 		}
@@ -316,6 +364,7 @@ func (t *TimestampConverter) SetupAndRun() {
 
 	t.window.SetMainMenu(t.MakeMenu())
 	t.window.SetContent(mainContainer)
+	t.SetupAndLoadPreferences()
 	t.window.Resize(fyne.NewSize(600, 400))
 	t.window.ShowAndRun()
 }
