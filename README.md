@@ -35,7 +35,7 @@ Timestamp Converter is a application written in Go [<https://go.dev>] powered by
 
 * Format menu let you choose way how timestamp is presented.
 
-* Theme menu to switch between Dark and Light mode.
+* Theme menu to switch between `Dark` and `Light` mode.
 
 <p align="center" markdown="1" style="max-width: 100%">
   <img src="assets/light_theme.png" alt="Main window" style="max-width: 100%" />
@@ -62,7 +62,7 @@ Built and tested with Go 1.19 and 1.20.
 Dependecies:
 * Go compiler -> <https://go.dev>
 
-Due to Fyne dependecies to build, you will need C++ compiler.
+Due to Fyne dependecies, to build you will need C++ compiler.
 * On Windows it will require mingw64.
 * On MacOs it will require XCode.
 * On Linux it will require gcc, additionaly with `xorg-dev` package.
