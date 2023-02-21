@@ -59,12 +59,12 @@ Notes:
 
 Built and tested with Go 1.19 and 1.20.
 
-Dependecies:
+Required:
 * Go compiler -> <https://go.dev>
 
-Due to Fyne dependecies, to build you will need C++ compiler.
+Due to Fyne dependencies, to build you will need C++ compiler.
 * On Windows it will require mingw64.
-* On MacOs it will require XCode.
+* On macOS it will require XCode.
 * On Linux it will require gcc, additionaly with `xorg-dev` package.
 
 ---
