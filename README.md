@@ -63,9 +63,10 @@ Required:
 * Go compiler -> <https://go.dev>
 
 Due to Fyne dependencies, to build you will need C++ compiler.
-* On Windows it will require mingw64.
+* On Windows it will require `mingw-w64`.
+  * MSYS2 -> <https://www.msys2.org/>
 * On macOS it will require XCode.
-* On Linux it will require gcc, additionaly with `xorg-dev` package.
+* On Linux it will require `gcc`, additionaly with `xorg-dev` package.
 
 ---
 
@@ -106,6 +107,8 @@ To make release build like those one present in release section it is recomended
 
 It will prepare binaries for given target OS.
 
-Note: If your `go/bin` folder is not in path then command will look like:
+Notes:
 
-    ~/go/bin/fyne package -os linux
+* If your `go/bin` folder is not in path then command will look like:
+
+      $GOPATH/bin/fyne package -os linux
