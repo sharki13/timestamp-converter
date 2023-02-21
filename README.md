@@ -96,7 +96,7 @@ To make release build like those one present in release section it is recomended
 
       fyne package -os windows
 
-* MacOs:
+* macOS:
 
       fyne package -os darwin
 
