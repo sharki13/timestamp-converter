@@ -1,5 +1,5 @@
 # About
-App to support anyone who have deal with timestamps in many timezones and formats
+App to support anyone who have to deal with timestamps in many timezones and formats.
 
 <p align="center" markdown="1" style="max-width: 100%">
   <img src="assets/main_window.png" alt="Main window" style="max-width: 100%" />
