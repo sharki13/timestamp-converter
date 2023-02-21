@@ -5,7 +5,7 @@ App to support anyone who have to deal with timestamps in many timezones and for
   <img src="assets/main_window.png" alt="Main window" style="max-width: 100%" />
 </p>
 
-Timestamp Converter is a application written in Go [<https://go.dev>] powered by Fyne tookit [<https://fyne.io/>].
+Timestamp Converter is a application written in Go [<https://go.dev>] powered by Fyne toolkit [<https://fyne.io/>].
 
 ---
 
